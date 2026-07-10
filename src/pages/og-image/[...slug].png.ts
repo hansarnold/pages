@@ -33,7 +33,7 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 export async function GET(context: APIContext) {
 	const { pubDate, title } = context.props as Props;
 
-	// check the og-image cache
+	// Check the OG image cache.
 	let pngBuffer = readCache(title, pubDate);
 	if (!pngBuffer) {
 		console.info(`Generating new OG image for: ${title}`);
@@ -57,7 +57,6 @@ export async function GET(context: APIContext) {
 export async function getStaticPaths() {
 	const entries = await getAllWriting();
 	return entries
-		.values()
 		.filter(({ data }) => !data.ogImage)
 		.map((entry) => ({
 			params: { slug: entry.id },
@@ -65,6 +64,5 @@ export async function getStaticPaths() {
 				pubDate: entry.data.updatedDate ?? entry.data.publishDate,
 				title: entry.data.title,
 			},
-		}))
-		.toArray();
+		}));
 }

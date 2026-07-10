@@ -22,7 +22,7 @@ import { expressiveCodeOptions, siteConfig } from "./src/site.config";
 export default defineConfig({
 	site: siteConfig.url,
 	base: siteConfig.base,
-	trailingSlash: "always",
+	trailingSlash: "ignore",
 	integrations: [
 		expressiveCode(expressiveCodeOptions),
 		sitemap(),
