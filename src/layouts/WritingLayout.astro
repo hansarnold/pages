@@ -32,7 +32,7 @@ const showToc = tocHeadings.length >= 3;
 		</header>
 		<div class="article-layout">
 			{showToc && <TOC headings={tocHeadings} />}
-			<div class="prose prose-sm">
+			<div class="prose article-prose">
 				<slot />
 			</div>
 		</div>
