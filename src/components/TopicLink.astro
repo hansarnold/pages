@@ -1,0 +1,13 @@
+---
+import { withBase } from "@/utils/url";
+
+interface Props {
+	topic: string;
+}
+
+const { topic } = Astro.props;
+---
+
+<a class="topic-link" data-pagefind-filter={`topic:${topic}`} href={withBase(`/topics/${topic}/`)}>
+	<span aria-hidden="true">#</span>{topic}
+</a>

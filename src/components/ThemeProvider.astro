@@ -1,0 +1,34 @@
+{/* Inlined to avoid FOUC. This is a parser blocking script. */}
+<script is:inline>
+	const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+	const preferences = ["system", "light", "dark"];
+
+	function getUserPref() {
+		const storedTheme = localStorage.getItem("theme-preference");
+		return preferences.includes(storedTheme) ? storedTheme : "system";
+	}
+
+	function setTheme(preference) {
+		if (!preferences.includes(preference)) return;
+		const root = document.documentElement;
+		const resolvedTheme = preference === "system" ? (colorScheme.matches ? "dark" : "light") : preference;
+		root.dataset.theme = resolvedTheme;
+		root.dataset.themePreference = preference;
+		localStorage.setItem("theme-preference", preference);
+		document.dispatchEvent(new CustomEvent("theme-change-applied"));
+	}
+
+	setTheme(getUserPref());
+
+	window.addEventListener("pageshow", (e) => {
+		if (e.persisted) setTheme(getUserPref());
+	});
+
+	document.addEventListener("theme-change", (e) => {
+		setTheme(e.detail.preference);
+	});
+
+	colorScheme.addEventListener("change", () => {
+		if (getUserPref() === "system") setTheme("system");
+	});
+</script>

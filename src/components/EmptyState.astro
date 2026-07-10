@@ -1,0 +1,16 @@
+---
+import { withBase } from "@/utils/url";
+
+interface Props {
+	href?: string;
+	linkLabel?: string;
+	message: string;
+}
+
+const { href, linkLabel, message } = Astro.props;
+---
+
+<div class="empty-state">
+	<p>{message}</p>
+	{href && linkLabel && <a href={withBase(href)}>{linkLabel} <span aria-hidden="true">→</span></a>}
+</div>

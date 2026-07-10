@@ -1,0 +1,32 @@
+---
+import type { CollectionEntry } from "astro:content";
+import type { HTMLTag, Polymorphic } from "astro/types";
+import FormattedDate from "@/components/FormattedDate.astro";
+import TopicLink from "@/components/TopicLink.astro";
+import { withBase } from "@/utils/url";
+
+type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag }> & {
+	note: CollectionEntry<"note">;
+};
+
+const { as: Heading = "h2" } = Astro.props;
+const note = Astro.props.note as CollectionEntry<"note">;
+---
+
+<article class="entry-row note-row">
+	<FormattedDate class="entry-date" date={note.data.publishDate} />
+	<div class="entry-body">
+		<Heading class="entry-title">
+			{note.data.draft && <span class="draft-label">Draft</span>}
+			<a href={withBase(`/notes/${note.id}/`)}>{note.data.title}</a>
+		</Heading>
+		{note.data.description && <p class="entry-description">{note.data.description}</p>}
+		{
+			note.data.tags.length > 0 && (
+				<div class="topic-list">
+					{note.data.tags.slice(0, 3).map((topic: string) => <TopicLink topic={topic} />)}
+				</div>
+			)
+		}
+	</div>
+</article>

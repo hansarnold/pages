@@ -1,0 +1,38 @@
+---
+import EmptyState from "@/components/EmptyState.astro";
+import ProjectListItem from "@/components/ProjectListItem.astro";
+import { getAllProjects } from "@/data/content";
+import PageLayout from "@/layouts/Base.astro";
+import { siteConfig } from "@/site.config";
+
+const projects = await getAllProjects();
+---
+
+<PageLayout
+	meta={{
+		title: "Projects",
+		description: "Selected experiments, tools, configurations, and study repositories.",
+	}}
+>
+	<header class="page-header">
+		<p class="eyebrow"><span>04</span> / projects</p>
+		<h1 class="page-title">Projects</h1>
+		<p class="page-intro">
+			A curated record of experiments, tools, configurations, and repositories worth explaining.
+		</p>
+	</header>
+
+	{
+		projects.length === 0 ? (
+			<EmptyState
+				href={siteConfig.github}
+				linkLabel="Browse GitHub"
+				message="The project list is waiting for curation. It will distinguish original work, experiments, and study copies explicitly."
+			/>
+		) : (
+			<ul class="project-list">
+				{projects.map((project) => <li><ProjectListItem project={project} /></li>)}
+			</ul>
+		)
+	}
+</PageLayout>

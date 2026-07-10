@@ -1,0 +1,37 @@
+---
+import { type CollectionEntry, render } from "astro:content";
+import type { HTMLTag, Polymorphic } from "astro/types";
+import FormattedDate from "@/components/FormattedDate.astro";
+import TopicLink from "@/components/TopicLink.astro";
+import { withBase } from "@/utils/url";
+
+type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag }> & {
+	entry: CollectionEntry<"writing">;
+};
+
+const { as: Heading = "h2" } = Astro.props;
+const entry = Astro.props.entry as CollectionEntry<"writing">;
+const { remarkPluginFrontmatter } = await render(entry);
+const readingTime = remarkPluginFrontmatter.readingTime as string | undefined;
+---
+
+<article class="entry-row writing-row">
+	<FormattedDate class="entry-date" date={entry.data.publishDate} />
+	<div class="entry-body">
+		<Heading class="entry-title">
+			{entry.data.draft && <span class="draft-label">Draft</span>}
+			<a href={withBase(`/writing/${entry.id}/`)}>{entry.data.title}</a>
+		</Heading>
+		<p class="entry-description">{entry.data.description}</p>
+		<div class="entry-footer">
+			{readingTime && <span>{readingTime}</span>}
+			{
+				entry.data.tags.length > 0 && (
+					<div class="topic-list">
+						{entry.data.tags.slice(0, 3).map((topic: string) => <TopicLink topic={topic} />)}
+					</div>
+				)
+			}
+		</div>
+	</div>
+</article>

@@ -1,0 +1,38 @@
+---
+import EmptyState from "@/components/EmptyState.astro";
+import NoteListItem from "@/components/NoteListItem.astro";
+import { getAllNotes, groupByYear } from "@/data/content";
+import PageLayout from "@/layouts/Base.astro";
+
+const notes = await getAllNotes();
+const grouped = groupByYear(notes);
+const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
+---
+
+<PageLayout
+	meta={{
+		title: "Notes",
+		description: "Short observations from current systems experiments and reading.",
+	}}
+>
+	<header class="page-header">
+		<p class="eyebrow"><span>02</span> / notes</p>
+		<h1 class="page-title">Notes</h1>
+		<p class="page-intro">Short observations from current experiments, reading, and debugging.</p>
+	</header>
+
+	{
+		notes.length === 0 ? (
+			<EmptyState message="No public notes yet. New entries will appear here as the notebook grows." />
+		) : (
+			years.map((year) => (
+				<section class="year-section" aria-labelledby={`notes-${year}`}>
+					<h2 class="year-heading" id={`notes-${year}`}>{year}</h2>
+					<ul class="entry-list">
+						{grouped[year]?.map((note) => <li><NoteListItem note={note} /></li>)}
+					</ul>
+				</section>
+			))
+		)
+	}
+</PageLayout>

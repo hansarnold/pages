@@ -1,0 +1,51 @@
+---
+import { render } from "astro:content";
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import FormattedDate from "@/components/FormattedDate.astro";
+import TopicLink from "@/components/TopicLink.astro";
+import { getAllNotes } from "@/data/content";
+import PageLayout from "@/layouts/Base.astro";
+import { withBase } from "@/utils/url";
+
+export const getStaticPaths = (async () => {
+	const notes = await getAllNotes();
+	return notes.map((note) => ({ params: { slug: note.id }, props: { note } }));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { note } = Astro.props;
+const { Content } = await render(note);
+const meta = {
+	description:
+		note.data.description ??
+		`A field note published ${note.data.publishDate.toLocaleDateString()}.`,
+	title: note.data.title,
+};
+---
+
+<PageLayout meta={meta}>
+	<article class="note-shell" data-pagefind-body>
+		<nav aria-label="Breadcrumbs" class="breadcrumbs">
+			<ol>
+				<li><a href={withBase("/notes/")}>Notes</a></li>
+				<li aria-current="page">{note.data.tags[0] ?? "note"}</li>
+			</ol>
+		</nav>
+		<header class="note-masthead">
+			{note.data.draft && <span class="draft-label">Draft</span>}
+			<h1 class="note-title">{note.data.title}</h1>
+			{note.data.description && <p class="article-description">{note.data.description}</p>}
+			<div class="note-meta">
+				<span>Published <FormattedDate date={note.data.publishDate} /></span>
+				{note.data.updatedDate && <span>Updated <FormattedDate date={note.data.updatedDate} /></span>}
+			</div>
+			{
+				note.data.tags.length > 0 && (
+					<div class="topic-list">{note.data.tags.map((topic) => <TopicLink topic={topic} />)}</div>
+				)
+			}
+		</header>
+		<div class="prose prose-sm"><Content /></div>
+		<a class="article-back" href={withBase("/notes/")}><span aria-hidden="true">←</span> All notes</a>
+	</article>
+</PageLayout>

@@ -1,0 +1,38 @@
+---
+import EmptyState from "@/components/EmptyState.astro";
+import WritingListItem from "@/components/WritingListItem.astro";
+import { getAllWriting, groupByYear } from "@/data/content";
+import PageLayout from "@/layouts/Base.astro";
+
+const writing = await getAllWriting();
+const grouped = groupByYear(writing);
+const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
+---
+
+<PageLayout
+	meta={{
+		title: "Writing",
+		description: "Longer explanations and experiments in systems, hardware, and software close to the machine.",
+	}}
+>
+	<header class="page-header">
+		<p class="eyebrow"><span>03</span> / writing</p>
+		<h1 class="page-title">Writing</h1>
+		<p class="page-intro">Longer explanations, experiments, and tutorials when a subject needs room.</p>
+	</header>
+
+	{
+		writing.length === 0 ? (
+			<EmptyState message="No public articles yet. Longer pieces will appear here when they are ready." />
+		) : (
+			years.map((year) => (
+				<section class="year-section" aria-labelledby={`writing-${year}`}>
+					<h2 class="year-heading" id={`writing-${year}`}>{year}</h2>
+					<ul class="entry-list">
+						{grouped[year]?.map((entry) => <li><WritingListItem entry={entry} /></li>)}
+					</ul>
+				</section>
+			))
+		)
+	}
+</PageLayout>

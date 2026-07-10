@@ -1,0 +1,68 @@
+---
+import { render } from "astro:content";
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import NoteListItem from "@/components/NoteListItem.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
+import WritingListItem from "@/components/WritingListItem.astro";
+import { getAllNotes, getAllWriting, getTopicMeta, getTopicsWithCount } from "@/data/content";
+import PageLayout from "@/layouts/Base.astro";
+import { withBase } from "@/utils/url";
+
+export const getStaticPaths = (async () => {
+	const topics = await getTopicsWithCount();
+	return topics.map(([topic]) => ({ params: { topic }, props: { topic } }));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { topic } = Astro.props;
+const [writing, notes, topicMeta] = await Promise.all([
+	getAllWriting(),
+	getAllNotes(),
+	getTopicMeta(topic),
+]);
+const relatedWriting = writing.filter((entry) => entry.data.tags.includes(topic));
+const relatedNotes = notes.filter((entry) => entry.data.tags.includes(topic));
+const TopicContent = topicMeta ? (await render(topicMeta)).Content : null;
+const title = topicMeta?.data.title ?? topic;
+---
+
+<PageLayout
+	meta={{
+		title: `Topic: ${title}`,
+		description: topicMeta?.data.description ?? `Notes and writing about ${topic}.`,
+	}}
+>
+	<nav aria-label="Breadcrumbs" class="breadcrumbs">
+		<ol>
+			<li><a href={withBase("/topics/")}>Topics</a></li>
+			<li aria-current="page">{topic}</li>
+		</ol>
+	</nav>
+	<header class="page-header">
+		<p class="eyebrow"><span>#</span> topic</p>
+		<h1 class="page-title">{title}</h1>
+		{topicMeta?.data.description && <p class="page-intro">{topicMeta.data.description}</p>}
+		{TopicContent && <div class="prose prose-sm"><TopicContent /></div>}
+	</header>
+
+	{
+		relatedWriting.length > 0 && (
+			<section class="home-section">
+				<SectionHeading label={`Writing (${relatedWriting.length})`} />
+				<ul class="entry-list">
+					{relatedWriting.map((entry) => <li><WritingListItem entry={entry} /></li>)}
+				</ul>
+			</section>
+		)
+	}
+	{
+		relatedNotes.length > 0 && (
+			<section class="home-section">
+				<SectionHeading label={`Notes (${relatedNotes.length})`} />
+				<ul class="entry-list">
+					{relatedNotes.map((note) => <li><NoteListItem note={note} /></li>)}
+				</ul>
+			</section>
+		)
+	}
+</PageLayout>

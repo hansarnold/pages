@@ -1,0 +1,43 @@
+---
+import Search from "@/components/Search.astro";
+import ThemeToggle from "@/components/ThemeToggle.astro";
+import { menuLinks } from "@/site.config";
+import { withBase, withoutBase } from "@/utils/url";
+
+const currentPath = withoutBase(Astro.url.pathname);
+const isActive = (path: string) =>
+	currentPath === path || (path !== "/" && currentPath.startsWith(path));
+---
+
+<header class="site-header" data-pagefind-ignore>
+	<a aria-current={currentPath === "/" ? "page" : undefined} class="site-mark" href={withBase("/")}>
+		<span>hans</span><span aria-hidden="true" class="site-mark-cursor">_</span>
+	</a>
+
+	<nav aria-label="Main" class="desktop-nav">
+		{
+			menuLinks.map((link) => (
+				<a aria-current={isActive(link.path) ? "page" : undefined} href={withBase(link.path)}>
+					{link.title}
+				</a>
+			))
+		}
+	</nav>
+
+	<div class="header-actions">
+		<Search />
+		<ThemeToggle />
+		<details class="mobile-menu">
+			<summary>Menu</summary>
+			<nav aria-label="Mobile">
+				{
+					menuLinks.map((link) => (
+						<a aria-current={isActive(link.path) ? "page" : undefined} href={withBase(link.path)}>
+							{link.title}
+						</a>
+					))
+				}
+			</nav>
+		</details>
+	</div>
+</header>

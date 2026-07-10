@@ -1,0 +1,21 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+import { withBase } from "@/utils/url";
+
+const meta = {
+	description: "The requested page could not be found.",
+	title: "Page not found",
+};
+---
+
+<PageLayout meta={meta}>
+	<section class="not-found">
+		<p class="not-found-code">404 · command not found</p>
+		<h1>The path ends here.</h1>
+		<p>The page may have moved, or the address may be incomplete.</p>
+		<nav aria-label="Recovery" class="not-found-links">
+			<a href={withBase("/")}>Return home</a>
+			<a href={withBase("/search/")}>Search the site</a>
+		</nav>
+	</section>
+</PageLayout>

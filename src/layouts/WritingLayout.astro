@@ -1,0 +1,41 @@
+---
+import { type CollectionEntry, render } from "astro:content";
+import Masthead from "@/components/blog/Masthead.astro";
+import TOC from "@/components/blog/TOC.astro";
+import { withBase } from "@/utils/url";
+import BaseLayout from "./Base.astro";
+
+interface Props {
+	entry: CollectionEntry<"writing">;
+}
+
+const { entry } = Astro.props;
+const { ogImage, title, description, publishDate } = entry.data;
+const socialImage = ogImage ?? `/og-image/${entry.id}.png`;
+const { headings, remarkPluginFrontmatter } = await render(entry);
+const readingTime = (remarkPluginFrontmatter.readingTime as string | undefined) ?? "";
+const tocHeadings = headings.filter(({ depth }) => depth === 2 || depth === 3);
+const showToc = tocHeadings.length >= 3;
+---
+
+<BaseLayout
+	meta={{
+		articleDate: publishDate.toISOString(),
+		description,
+		ogImage: socialImage,
+		title,
+	}}
+>
+	<article class="article-shell" data-pagefind-body>
+		<header class="article-masthead">
+			<Masthead content={entry} readingTime={readingTime} />
+		</header>
+		<div class="article-layout">
+			{showToc && <TOC headings={tocHeadings} />}
+			<div class="prose prose-sm">
+				<slot />
+			</div>
+		</div>
+		<a class="article-back" href={withBase("/writing/")}><span aria-hidden="true">←</span> All writing</a>
+	</article>
+</BaseLayout>

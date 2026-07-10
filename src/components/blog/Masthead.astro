@@ -1,0 +1,55 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import FormattedDate from "@/components/FormattedDate.astro";
+import TopicLink from "@/components/TopicLink.astro";
+import { withBase } from "@/utils/url";
+
+interface Props {
+	content: CollectionEntry<"writing">;
+	readingTime: string;
+}
+
+const {
+	content: { data },
+	readingTime,
+} = Astro.props;
+---
+
+<nav aria-label="Breadcrumbs" class="breadcrumbs">
+	<ol>
+		<li><a href={withBase("/writing/")}>Writing</a></li>
+		<li aria-current="page">{data.tags[0] ?? "article"}</li>
+	</ol>
+</nav>
+{
+	data.coverImage && (
+		<div class="article-cover">
+			<Image
+				alt={data.coverImage.alt}
+				layout="constrained"
+				width={748}
+				height={420}
+				priority
+				src={data.coverImage.src}
+			/>
+		</div>
+	)
+}
+{data.draft && <span class="draft-label">Draft</span>}
+<h1 class="article-title">
+	{data.title}
+</h1>
+<p class="article-description">{data.description}</p>
+<div class="article-meta">
+	<span>Published <FormattedDate date={data.publishDate} /></span>
+	{data.updatedDate && <span>Updated <FormattedDate date={data.updatedDate} /></span>}
+	<span>{readingTime}</span>
+</div>
+{
+	!!data.tags?.length && (
+		<div class="topic-list">
+			{data.tags.map((topic) => <TopicLink topic={topic} />)}
+		</div>
+	)
+}

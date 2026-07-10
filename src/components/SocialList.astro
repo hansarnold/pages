@@ -1,0 +1,9 @@
+---
+import { siteConfig } from "@/site.config";
+import { withBase } from "@/utils/url";
+---
+
+<nav aria-label="Elsewhere" class="hero-links">
+	<a href={siteConfig.github} rel="me noreferrer" target="_blank">GitHub <span aria-hidden="true">↗</span></a>
+	<a href={withBase("/rss.xml")}>RSS <span aria-hidden="true">→</span></a>
+</nav>

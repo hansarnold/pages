@@ -1,0 +1,15 @@
+---
+import { siteConfig } from "@/site.config";
+import { withBase } from "@/utils/url";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer" data-pagefind-ignore>
+	<p>&copy; {year} {siteConfig.author}. Built as a static field notebook.</p>
+	<nav aria-label="Footer">
+		<a href={siteConfig.github} rel="me noreferrer" target="_blank">GitHub</a>
+		<a href={withBase("/rss.xml")}>RSS</a>
+		<a href={siteConfig.repository} rel="noreferrer" target="_blank">Source</a>
+	</nav>
+</footer>

@@ -1,0 +1,31 @@
+---
+import EmptyState from "@/components/EmptyState.astro";
+import { getTopicsWithCount } from "@/data/content";
+import PageLayout from "@/layouts/Base.astro";
+import { withBase } from "@/utils/url";
+
+const topics = await getTopicsWithCount();
+---
+
+<PageLayout meta={{ title: "Topics", description: "Browse notes and writing by technical topic." }}>
+	<header class="page-header">
+		<p class="eyebrow"><span>05</span> / topics</p>
+		<h1 class="page-title">Topics</h1>
+		<p class="page-intro">A controlled index of the subjects represented in public notes and writing.</p>
+	</header>
+
+	{
+		topics.length === 0 ? (
+			<EmptyState message="Topics will be generated automatically when the first notes and articles are published." />
+		) : (
+			<ul class="topic-index">
+				{topics.map(([topic, count]) => (
+					<li>
+						<a href={withBase(`/topics/${topic}/`)}>#{topic}</a>
+						<span>{count} {count === 1 ? "entry" : "entries"}</span>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</PageLayout>

@@ -1,0 +1,19 @@
+---
+import { withBase } from "@/utils/url";
+---
+
+<a aria-label="Search" class="icon-button search-link" href={withBase("/search/")}>
+	<svg
+		aria-hidden="true"
+		fill="none"
+		focusable="false"
+		stroke="currentColor"
+		stroke-linecap="round"
+		stroke-width="1.8"
+		viewBox="0 0 24 24"
+	>
+		<circle cx="10.5" cy="10.5" r="6.5"></circle>
+		<path d="m16 16 5 5"></path>
+	</svg>
+	<span class="search-label">Search</span>
+</a>
