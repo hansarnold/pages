@@ -1,7 +1,7 @@
 # Hans — Systems Field Notes
 
-A small, content-first notebook for technical notes, longer writing, and
-selected systems projects.
+A small, content-first notebook for technical notes and longer writing about
+GPU drivers, firmware, Linux, and memory systems.
 
 The site is built with Astro and deployed as a static GitHub Pages project at
 `https://hansarnold.github.io/pages/`.
@@ -27,7 +27,6 @@ Content lives under `content/`:
 
 - `notes/` for short observations
 - `writing/` for long-form articles
-- `projects/` for a curated project list
 - `topics/` for optional topic descriptions
 
 Copy the examples in `content/_templates/` when starting a new entry. Drafts

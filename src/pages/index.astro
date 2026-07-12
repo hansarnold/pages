@@ -1,23 +1,15 @@
 ---
 import NoteListItem from "@/components/NoteListItem.astro";
-import ProjectListItem from "@/components/ProjectListItem.astro";
 import SectionHeading from "@/components/SectionHeading.astro";
 import SocialList from "@/components/SocialList.astro";
 import WritingListItem from "@/components/WritingListItem.astro";
-import { getAllNotes, getAllProjects, getAllWriting } from "@/data/content";
+import { getAllNotes, getAllWriting } from "@/data/content";
 import PageLayout from "@/layouts/Base.astro";
 import { siteConfig } from "@/site.config";
 
-const [allNotes, allWriting, allProjects] = await Promise.all([
-	getAllNotes(),
-	getAllWriting(),
-	getAllProjects(),
-]);
+const [allNotes, allWriting] = await Promise.all([getAllNotes(), getAllWriting()]);
 const latestNotes = allNotes.slice(0, 5);
 const selectedWriting = [...allWriting]
-	.sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
-	.slice(0, 3);
-const selectedProjects = [...allProjects]
 	.sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
 	.slice(0, 3);
 ---
@@ -25,17 +17,17 @@ const selectedProjects = [...allProjects]
 <PageLayout meta={{ title: "Home" }}>
 	<section class="hero">
 		<p class="terminal-line"><span>hans@machine</span>:~$ whoami</p>
-		<h1>Systems field notes.</h1>
-		<p class="hero-lede">Learning the layers where software meets the machine.</p>
+		<h1>GPU systems, from the kernel up.</h1>
+		<p class="hero-lede">Field notes on drivers, firmware, memory, and Linux.</p>
 		<p class="hero-copy">
-			I'm Hans. This is a working notebook for short observations, deeper explanations, and
-			selected experiments in systems and hardware.
+			I'm Hans. I work on GPU systems at a fabless semiconductor company. This is where I
+			trace the boundaries between hardware, firmware, the kernel, and the runtime.
 		</p>
 		<SocialList />
 	</section>
 
 	<section aria-labelledby="focus-heading" class="focus-block">
-		<h2 id="focus-heading">Currently exploring</h2>
+		<h2 id="focus-heading">Current focus</h2>
 		<ul class="focus-list">
 			{siteConfig.currentFocus.map((focus) => <li>{focus}</li>)}
 		</ul>
@@ -60,18 +52,6 @@ const selectedProjects = [...allProjects]
 				<ul class="entry-list">
 					{selectedWriting.map((entry) => (
 						<li><WritingListItem as="h3" entry={entry} /></li>
-					))}
-				</ul>
-			</section>
-		)
-	}
-	{
-		selectedProjects.length > 0 && (
-			<section class="home-section">
-				<SectionHeading href="/projects/" label="Projects" />
-				<ul class="project-list">
-					{selectedProjects.map((project) => (
-						<li><ProjectListItem as="h3" project={project} /></li>
 					))}
 				</ul>
 			</section>

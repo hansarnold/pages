@@ -49,22 +49,6 @@ const note = defineCollection({
 	}),
 });
 
-const project = defineCollection({
-	loader: glob({ base: "./content/projects", pattern: "**/*.{md,mdx}" }),
-	schema: z.object({
-		description: z.string().min(10).max(240),
-		draft: z.boolean().default(false),
-		featured: z.boolean().default(false),
-		homepage: z.url().optional(),
-		name: z.string().min(1).max(80),
-		order: z.number().int().default(100),
-		relationship: z.enum(["built", "maintained", "experiment", "studied", "forked", "configured"]),
-		repository: z.url(),
-		status: z.enum(["active", "study", "archived"]).default("active"),
-		topics: z.array(z.string()).default([]).transform(normalizeTopics),
-	}),
-});
-
 const topic = defineCollection({
 	loader: glob({ base: "./content/topics", pattern: "**/*.{md,mdx}" }),
 	schema: z.object({
@@ -73,4 +57,4 @@ const topic = defineCollection({
 	}),
 });
 
-export const collections = { note, project, topic, writing };
+export const collections = { note, topic, writing };

@@ -20,13 +20,6 @@ export async function getAllNotes() {
 	return entries.sort(newestFirst);
 }
 
-export async function getAllProjects() {
-	const entries = await getCollection("project", ({ data }) => isPublic(data));
-	return entries.sort(
-		(a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name),
-	);
-}
-
 export function groupByYear<T extends DatedEntry>(entries: T[]) {
 	return entries.reduce<Record<string, T[]>>((groups, entry) => {
 		const year = entry.data.publishDate.getFullYear().toString();

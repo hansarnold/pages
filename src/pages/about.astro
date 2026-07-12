@@ -3,7 +3,7 @@ import PageLayout from "@/layouts/Base.astro";
 import { siteConfig } from "@/site.config";
 
 const meta = {
-	description: "About Hans and his interests in systems, hardware, and open-source software.",
+	description: "About Hans and his work across GPU drivers, firmware, Linux, and memory systems.",
 	title: "About",
 };
 
@@ -13,7 +13,13 @@ const personData = {
 	name: "Hans",
 	url: `${siteConfig.url}${siteConfig.base}/about/`,
 	sameAs: [siteConfig.github],
-	knowsAbout: ["GPU programming", "AI systems", "computer hardware", "Rust", "Linux"],
+	knowsAbout: [
+		"GPU drivers",
+		"Linux kernel interfaces",
+		"GPU firmware",
+		"GPU memory management",
+		"systems debugging",
+	],
 };
 ---
 
@@ -25,24 +31,41 @@ const personData = {
 	</header>
 	<div class="prose prose-sm article-shell" data-pagefind-body>
 		<p>
-			I'm Hans. I work on GPU systems at a fabless semiconductor company. I'm currently learning
-			about systems and hardware, especially the layers where software meets the machine. I enjoy
-			tinkering with software that lives in the terminal.
+			I'm Hans. I work on GPU systems at a fabless semiconductor company. I care about the
+			boundaries that make a GPU usable as a system: where the driver meets the kernel, where
+			firmware takes over resource management, and where virtual addresses become mappings,
+			residency decisions, and migration.
 		</p>
 
-		<h2>Currently exploring</h2>
+		<h2>Areas of focus</h2>
 		<ul>
-			<li><strong>GPU and AI systems:</strong> GPU programming, CUDA, and efficient compute</li>
-			<li><strong>Hardware:</strong> computer architecture, accelerators, and performance</li>
-			<li><strong>Systems programming:</strong> Rust, low-level software, drivers, and tooling</li>
-			<li><strong>Open systems:</strong> Linux, free software, and open-source tooling</li>
+			<li>
+				<strong>Driver and kernel integration:</strong> module boundaries, kernel interfaces, and
+				resource lifecycles
+			</li>
+			<li>
+				<strong>Bring-up and failure analysis:</strong> boot stages, firmware handoffs, and locating
+				the layer that actually failed
+			</li>
+			<li>
+				<strong>Memory systems:</strong> address translation, residency, migration, coherency, and
+				fault handling
+			</li>
+			<li>
+				<strong>Systems tooling:</strong> tracing, crash evidence, and reproducible debugging
+				workflows
+			</li>
 		</ul>
 
 		<h2>About this site</h2>
 		<p>
-			This site is a public field notebook: short notes for discoveries worth remembering, longer
-			explanations when a subject needs room, and a curated record of useful experiments. It is
-			intentionally static, lightweight, and kept close to the source files.
+			This site is a public field notebook: compact notes for mechanisms worth remembering and
+			longer explanations when a boundary needs to be followed end to end. It is intentionally
+			static, lightweight, and kept close to the source files.
+		</p>
+		<p>
+			The views here are my own. I write from public interfaces, upstream sources, and general
+			engineering practice; confidential work stays private.
 		</p>
 
 		<h2>Elsewhere</h2>

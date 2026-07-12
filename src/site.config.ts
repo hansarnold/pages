@@ -8,12 +8,17 @@ export const siteConfig: SiteConfig = {
 	shortTitle: "Hans",
 	author: "Hans",
 	description:
-		"Notes on GPU and AI systems, hardware, Rust, Linux, and software close to the machine.",
+		"Field notes on GPU drivers, Linux kernel interfaces, firmware, and memory management.",
 	lang: "en",
 	ogLocale: "en_US",
 	github: "https://github.com/hansarnold",
 	repository: "https://github.com/hansarnold/pages",
-	currentFocus: ["GPU & AI systems", "hardware", "Rust", "Linux"],
+	currentFocus: [
+		"GPU driver architecture",
+		"Linux kernel integration",
+		"firmware & bring-up",
+		"memory management",
+	],
 	date: {
 		options: {
 			day: "numeric",
@@ -32,10 +37,6 @@ export const menuLinks: { path: string; title: string }[] = [
 	{
 		path: "/writing/",
 		title: "Writing",
-	},
-	{
-		path: "/projects/",
-		title: "Projects",
 	},
 	{
 		path: "/about/",
