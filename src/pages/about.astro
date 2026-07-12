@@ -1,6 +1,7 @@
 ---
 import PageLayout from "@/layouts/Base.astro";
 import { siteConfig } from "@/site.config";
+import { withBase } from "@/utils/url";
 
 const meta = {
 	description: "About Hans and his work across GPU drivers, firmware, Linux, and memory systems.",
@@ -11,7 +12,7 @@ const personData = {
 	"@context": "https://schema.org",
 	"@type": "Person",
 	name: "Hans",
-	url: `${siteConfig.url}${siteConfig.base}/about/`,
+	url: new URL(withBase("/about/"), siteConfig.url).href,
 	sameAs: [siteConfig.github],
 	knowsAbout: [
 		"GPU drivers",

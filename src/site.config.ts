@@ -2,8 +2,8 @@ import type { AstroExpressiveCodeOptions } from "astro-expressive-code";
 import type { SiteConfig } from "@/types";
 
 export const siteConfig: SiteConfig = {
-	url: "https://hansarnold.github.io",
-	base: "/pages",
+	url: "https://hansarnold.uk",
+	base: "/",
 	title: "Hans — Systems Field Notes",
 	shortTitle: "Hans",
 	author: "Hans",

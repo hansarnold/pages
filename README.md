@@ -4,7 +4,7 @@ A small, content-first notebook for technical notes and longer writing about
 GPU drivers, firmware, Linux, and memory systems.
 
 The site is built with Astro and deployed as a static GitHub Pages project at
-`https://hansarnold.github.io/pages/`.
+`https://hansarnold.uk/`.
 
 ## Development
 
@@ -18,8 +18,7 @@ pnpm build
 pnpm preview
 ```
 
-Because the deployed site lives below `/pages`, the same base path is active in
-development. Open `http://localhost:4321/pages/` after starting Astro.
+Open `http://localhost:4321/` after starting Astro locally.
 
 ## Content
 
