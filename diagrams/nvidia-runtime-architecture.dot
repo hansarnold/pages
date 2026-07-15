@@ -1,0 +1,113 @@
+digraph runtime_architecture {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad="0.25",
+    nodesep="0.34",
+    ranksep="0.58",
+    splines=ortho,
+    fontname="Arial",
+    fontsize=12,
+    fontcolor="#17201a"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#f4f1e8",
+    color="#aeb5aa",
+    penwidth=1.15,
+    fontname="Arial",
+    fontsize=10.5,
+    fontcolor="#17201a",
+    margin="0.17,0.11"
+  ];
+  edge [
+    color="#5d675f",
+    penwidth=1.2,
+    arrowsize=0.68,
+    fontname="Arial",
+    fontsize=8.5,
+    fontcolor="#5d675f"
+  ];
+
+  subgraph cluster_userspace {
+    label="USERSPACE";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#ebe8dc";
+    margin=16;
+
+    cuda [label="CUDA runtime\n+ NVML"];
+    display [label="Wayland / Xorg\n+ GBM"];
+    rdma_client [label="RDMA client"];
+  }
+
+  subgraph cluster_interfaces {
+    label="LINUX DEVICE INTERFACES";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#f0eee6";
+    margin=16;
+
+    dev_rm [label="/dev/nvidiactl\n/dev/nvidiaN"];
+    dev_uvm [label="/dev/nvidia-uvm"];
+    dev_dri [label="/dev/dri/card*\n/dev/dri/renderD*"];
+    rdma_api [label="RDMA peer-memory API"];
+  }
+
+  subgraph cluster_modules {
+    label="NVIDIA KERNEL MODULES";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#6f942e";
+    fillcolor="#edf1df";
+    penwidth=1.5;
+    margin=18;
+
+    nvidia [label="nvidia.ko\nRM · PCI · GPU control", fillcolor="#e4ecd0", color="#6f942e"];
+    uvm [label="nvidia-uvm.ko\nVA · migration · faults"];
+    drm [label="nvidia-drm.ko\nDRM/KMS bridge"];
+    modeset [label="nvidia-modeset.ko\nNVKMS"];
+    peermem [label="nvidia-peermem.ko\npeer-memory glue"];
+  }
+
+  subgraph cluster_platform {
+    label="KERNEL + GPU MANAGEMENT PLANE";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#ebe8dc";
+    margin=16;
+
+    drm_core [label="Linux DRM core"];
+    rdma_core [label="Linux RDMA core"];
+    gsp [label="GSP-RM firmware"];
+    gpu [label="GPU hardware", shape=component, fillcolor="#eef3e8", color="#6f942e"];
+  }
+
+  cuda -> dev_rm;
+  cuda -> dev_uvm;
+  display -> dev_dri;
+  rdma_client -> rdma_api;
+
+  dev_rm -> nvidia [label=" ioctl / mmap "];
+  dev_uvm -> uvm;
+  dev_dri -> drm;
+  rdma_api -> peermem;
+
+  uvm -> nvidia [label=" RM interface "];
+  drm -> modeset;
+  drm -> drm_core;
+  modeset -> nvidia;
+  peermem -> nvidia;
+  peermem -> rdma_core;
+
+  nvidia -> gsp [label=" firmware boot "];
+  gsp -> gpu;
+}
