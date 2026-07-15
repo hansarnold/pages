@@ -24,50 +24,24 @@ userspace stack.
 
 <figure class="system-diagram scope-diagram" aria-labelledby="dkms-scope-title">
   <figcaption id="dkms-scope-title">
-    <strong>DKMS covers one segment of the path to a working GPU</strong>
-    <span>A successful install leaves several independent gates unchecked.</span>
+    <strong>DKMS stops at installation</strong>
+    <span>A working GPU still depends on kernel acceptance, device initialization, and a matching userspace.</span>
   </figcaption>
-  <div class="scope-track">
-    <div class="scope-group scope-owned">
-      <span class="scope-owner">DKMS owns</span>
-      <div class="scope-step">
-        <span class="diagram-kicker">01</span>
-        <strong>Add</strong>
-        <small>register source</small>
-      </div>
-      <span class="diagram-arrow" aria-hidden="true">→</span>
-      <div class="scope-step">
-        <span class="diagram-kicker">02</span>
-        <strong>Build</strong>
-        <small>conftest · Kbuild · MODPOST</small>
-      </div>
-      <span class="diagram-arrow" aria-hidden="true">→</span>
-      <div class="scope-step">
-        <span class="diagram-kicker">03</span>
-        <strong>Install</strong>
-        <small>module tree · depmod</small>
-      </div>
+  <div class="scope-lane scope-owned">
+    <div class="lane-heading"><span>DKMS-managed</span><small>build and install kernel objects</small></div>
+    <div class="scope-steps">
+      <div class="flow-node"><span class="diagram-kicker">01</span><strong>Register source</strong><small><code>/usr/src/nvidia-*</code></small></div>
+      <div class="flow-node"><span class="diagram-kicker">02</span><strong>Build for one kernel</strong><small>conftest → Kbuild → MODPOST</small></div>
+      <div class="flow-node"><span class="diagram-kicker">03</span><strong>Install modules</strong><small><code>/lib/modules/...</code> + depmod</small></div>
     </div>
-    <span class="diagram-arrow scope-boundary" aria-hidden="true">→</span>
-    <div class="scope-group scope-external">
-      <span class="scope-owner">Outside DKMS</span>
-      <div class="scope-step">
-        <span class="diagram-kicker">04</span>
-        <strong>Load</strong>
-        <small>ABI · symbols · signature</small>
-      </div>
-      <span class="diagram-arrow" aria-hidden="true">→</span>
-      <div class="scope-step">
-        <span class="diagram-kicker">05</span>
-        <strong>Initialize</strong>
-        <small>PCI · RM · GSP · device nodes</small>
-      </div>
-      <span class="diagram-arrow" aria-hidden="true">→</span>
-      <div class="scope-step">
-        <span class="diagram-kicker">06</span>
-        <strong>Use</strong>
-        <small>matching userspace stack</small>
-      </div>
+  </div>
+  <div class="scope-handoff"><span>DKMS ends here</span></div>
+  <div class="scope-lane scope-external">
+    <div class="lane-heading"><span>Runtime validation</span><small>performed by the kernel and driver stack</small></div>
+    <div class="scope-steps">
+      <div class="flow-node"><span class="diagram-kicker">04</span><strong>Accept the module</strong><small>ABI · symbols · signature</small></div>
+      <div class="flow-node"><span class="diagram-kicker">05</span><strong>Bring up the GPU</strong><small>PCI probe · RM · GSP</small></div>
+      <div class="flow-node"><span class="diagram-kicker">06</span><strong>Open a context</strong><small>device nodes · matching libraries</small></div>
     </div>
   </div>
 </figure>
@@ -85,40 +59,21 @@ OS-agnostic binary components.
 
 <figure class="system-diagram module-build-diagram" aria-labelledby="module-build-title">
   <figcaption id="module-build-title">
-    <strong>What Kbuild combines for each NVIDIA kernel module</strong>
-    <span>Every row is built for the target kernel, but not every input is source code in the proprietary package.</span>
+    <strong>What becomes each NVIDIA kernel module</strong>
+    <span>The proprietary package links prebuilt cores only for RM and NVKMS; the other modules are Linux-facing implementations.</span>
   </figcaption>
-  <div class="module-build-head" aria-hidden="true">
-    <span>Driver-side input</span><span>Kernel-facing input</span><span>Output</span>
+  <div class="module-group">
+    <div class="lane-heading"><span>Portable core + Linux interface</span><small>linked together for the target kernel</small></div>
+    <div class="module-row"><div><strong>RM core</strong><small><code>nv-kernel.o_binary</code></small></div><span aria-hidden="true">+</span><div><strong>Linux interface</strong><small>kernel-specific objects</small></div><span aria-hidden="true">→</span><div class="diagram-output"><code>nvidia.ko</code><small>resource manager</small></div></div>
+    <div class="module-row"><div><strong>NVKMS core</strong><small><code>nv-modeset-kernel.o_binary</code></small></div><span aria-hidden="true">+</span><div><strong>Linux interface</strong><small>kernel-specific objects</small></div><span aria-hidden="true">→</span><div class="diagram-output"><code>nvidia-modeset.ko</code><small>display control</small></div></div>
   </div>
-  <div class="module-build-row">
-    <div><strong>RM core</strong><small><code>nv-kernel.o_binary</code> or open source</small></div>
-    <span class="diagram-plus" aria-hidden="true">+</span>
-    <div><strong>Linux interface</strong><small>compiled for the target kernel</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><code>nvidia.ko</code><small>resource manager</small></div>
-  </div>
-  <div class="module-build-row">
-    <div><strong>NVKMS core</strong><small><code>nv-modeset-kernel.o_binary</code> or open source</small></div>
-    <span class="diagram-plus" aria-hidden="true">+</span>
-    <div><strong>Linux interface</strong><small>compiled for the target kernel</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><code>nvidia-modeset.ko</code><small>display engine control</small></div>
-  </div>
-  <div class="module-build-row module-build-native">
-    <div><strong>Linux DRM/KMS glue</strong><small>kernel-facing implementation</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><code>nvidia-drm.ko</code><small>DRM bridge</small></div>
-  </div>
-  <div class="module-build-row module-build-native">
-    <div><strong>Linux UVM/HMM code</strong><small>kernel-facing implementation</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><code>nvidia-uvm.ko</code><small>virtual memory</small></div>
-  </div>
-  <div class="module-build-row module-build-native">
-    <div><strong>RDMA peer-memory glue</strong><small>kernel-facing implementation</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><code>nvidia-peermem.ko</code><small>GPUDirect RDMA</small></div>
+  <div class="module-group">
+    <div class="lane-heading"><span>Linux-facing implementation</span><small>no OS-agnostic binary core</small></div>
+    <div class="native-modules">
+      <div><strong>DRM/KMS glue</strong><span aria-hidden="true">→</span><code>nvidia-drm.ko</code></div>
+      <div><strong>UVM/HMM</strong><span aria-hidden="true">→</span><code>nvidia-uvm.ko</code></div>
+      <div><strong>RDMA peer memory</strong><span aria-hidden="true">→</span><code>nvidia-peermem.ko</code></div>
+    </div>
   </div>
 </figure>
 
@@ -190,35 +145,12 @@ At runtime the NVIDIA modules form a dependency graph, not a flat list:
 
 <figure class="system-diagram runtime-diagram" aria-labelledby="runtime-path-title">
   <figcaption id="runtime-path-title">
-    <strong>Three runtime paths share RM but fail independently</strong>
-    <span>The arrows show the primary control path, not every internal call.</span>
+    <strong>Compute, display, and RDMA take different paths</strong>
+    <span>All eventually depend on <code>nvidia.ko</code> (RM), but each path can fail independently.</span>
   </figcaption>
-  <div class="runtime-lane">
-    <span class="runtime-label">Compute</span>
-    <div><strong>CUDA / NVML</strong><small>userspace</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div><code>/dev/nvidia*</code><small>ioctl · mmap</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><code>nvidia.ko</code><small>RM · PCI · GPU control</small></div>
-    <div class="runtime-branch"><code>/dev/nvidia-uvm</code><span aria-hidden="true">→</span><code>nvidia-uvm.ko</code><span aria-hidden="true">→</span><span>RM interface</span></div>
-  </div>
-  <div class="runtime-lane">
-    <span class="runtime-label">Display</span>
-    <div><strong>Xorg / Wayland / GBM</strong><small>userspace</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div><code>/dev/dri/card*</code><small>DRM device</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><code>nvidia-drm.ko</code><small>DRM/KMS registration</small></div>
-    <div class="runtime-branch"><span>DRM core</span><span aria-hidden="true">↔</span><code>nvidia-drm.ko</code><span aria-hidden="true">→</span><code>nvidia-modeset.ko</code><span aria-hidden="true">→</span><code>nvidia.ko</code></div>
-  </div>
-  <div class="runtime-lane">
-    <span class="runtime-label">RDMA</span>
-    <div><strong>GPUDirect RDMA</strong><small>peer-memory client</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div><code>nvidia-peermem.ko</code><small>peer-memory glue</small></div>
-    <span class="diagram-arrow" aria-hidden="true">→</span>
-    <div class="diagram-output"><strong>RM + RDMA core</strong><small>shared boundary</small></div>
-  </div>
+  <div class="runtime-row"><span class="runtime-label">Compute</span><div class="runtime-flow"><div><strong>CUDA / NVML</strong><small>userspace</small></div><div><code>/dev/nvidia*</code><small>ioctl · mmap</small></div><div><code>nvidia.ko</code><small>RM</small></div></div><div class="runtime-note"><code>nvidia-uvm.ko</code> adds managed-memory and GPU VA services through RM.</div></div>
+  <div class="runtime-row"><span class="runtime-label">Display</span><div class="runtime-flow"><div><strong>Wayland / Xorg</strong><small>userspace</small></div><div><code>nvidia-drm.ko</code><small>DRM/KMS</small></div><div><code>nvidia-modeset.ko</code><small>NVKMS → RM</small></div></div></div>
+  <div class="runtime-row"><span class="runtime-label">RDMA</span><div class="runtime-flow"><div><strong>RDMA client</strong><small>peer-memory API</small></div><div><code>nvidia-peermem.ko</code><small>glue</small></div><div><strong>RM + RDMA core</strong><small>shared boundary</small></div></div></div>
 </figure>
 
 The open `nvidia.ko` source shows the boundary directly: it registers the PCI
