@@ -2,7 +2,8 @@
 
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/utilities.css" layer(utilities);\n@import "./components/architecture-diagram.css";
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./components/architecture-diagram.css";
 
 @source not "../pages/og-image";
 @config "../../tailwind.config.ts";
