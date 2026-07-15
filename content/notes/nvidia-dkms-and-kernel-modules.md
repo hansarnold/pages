@@ -2,6 +2,7 @@
 title: Where DKMS Ends in the NVIDIA Linux Driver
 description: Following an NVIDIA driver build across RM, Kbuild, module ABI checks, GSP firmware, UVM, and DRM to see what DKMS does—and what it cannot do.
 publishDate: 2026-07-12
+updatedDate: 2026-07-15
 tags:
   - gpu
   - linux
@@ -21,6 +22,56 @@ adaptation, exported kernel symbols, module signing, PCI probe, RM and GSP
 initialization, inter-module symbols, device nodes, and an exactly matched
 userspace stack.
 
+<figure class="system-diagram scope-diagram" aria-labelledby="dkms-scope-title">
+  <figcaption id="dkms-scope-title">
+    <strong>DKMS covers one segment of the path to a working GPU</strong>
+    <span>A successful install leaves several independent gates unchecked.</span>
+  </figcaption>
+  <div class="scope-track">
+    <div class="scope-group scope-owned">
+      <span class="scope-owner">DKMS owns</span>
+      <div class="scope-step">
+        <span class="diagram-kicker">01</span>
+        <strong>Add</strong>
+        <small>register source</small>
+      </div>
+      <span class="diagram-arrow" aria-hidden="true">→</span>
+      <div class="scope-step">
+        <span class="diagram-kicker">02</span>
+        <strong>Build</strong>
+        <small>conftest · Kbuild · MODPOST</small>
+      </div>
+      <span class="diagram-arrow" aria-hidden="true">→</span>
+      <div class="scope-step">
+        <span class="diagram-kicker">03</span>
+        <strong>Install</strong>
+        <small>module tree · depmod</small>
+      </div>
+    </div>
+    <span class="diagram-arrow scope-boundary" aria-hidden="true">→</span>
+    <div class="scope-group scope-external">
+      <span class="scope-owner">Outside DKMS</span>
+      <div class="scope-step">
+        <span class="diagram-kicker">04</span>
+        <strong>Load</strong>
+        <small>ABI · symbols · signature</small>
+      </div>
+      <span class="diagram-arrow" aria-hidden="true">→</span>
+      <div class="scope-step">
+        <span class="diagram-kicker">05</span>
+        <strong>Initialize</strong>
+        <small>PCI · RM · GSP · device nodes</small>
+      </div>
+      <span class="diagram-arrow" aria-hidden="true">→</span>
+      <div class="scope-step">
+        <span class="diagram-kicker">06</span>
+        <strong>Use</strong>
+        <small>matching userspace stack</small>
+      </div>
+    </div>
+  </div>
+</figure>
+
 ## What NVIDIA actually rebuilds
 
 NVIDIA's source tree separates OS-agnostic driver code from the Linux kernel
@@ -32,18 +83,44 @@ source, but preserves the same architectural boundary. `nvidia-drm.ko` and
 `nvidia-uvm.ko` are Linux-facing implementations and do not have those
 OS-agnostic binary components.
 
-```text
-                   target kernel headers + configuration
-                                  │
-                                  ▼
-RM core ───────────────┐    Linux interface objects ──┐
-                       ├───────────────────────────────┴─> nvidia.ko
-NVKMS core ────────────┤    Linux interface objects ─────> nvidia-modeset.ko
-                       │
-Linux DRM/KMS glue ────┴─────────────────────────────────> nvidia-drm.ko
-Linux UVM/HMM code ──────────────────────────────────────> nvidia-uvm.ko
-RDMA peer-memory glue ───────────────────────────────────> nvidia-peermem.ko
-```
+<figure class="system-diagram module-build-diagram" aria-labelledby="module-build-title">
+  <figcaption id="module-build-title">
+    <strong>What Kbuild combines for each NVIDIA kernel module</strong>
+    <span>Every row is built for the target kernel, but not every input is source code in the proprietary package.</span>
+  </figcaption>
+  <div class="module-build-head" aria-hidden="true">
+    <span>Driver-side input</span><span>Kernel-facing input</span><span>Output</span>
+  </div>
+  <div class="module-build-row">
+    <div><strong>RM core</strong><small><code>nv-kernel.o_binary</code> or open source</small></div>
+    <span class="diagram-plus" aria-hidden="true">+</span>
+    <div><strong>Linux interface</strong><small>compiled for the target kernel</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><code>nvidia.ko</code><small>resource manager</small></div>
+  </div>
+  <div class="module-build-row">
+    <div><strong>NVKMS core</strong><small><code>nv-modeset-kernel.o_binary</code> or open source</small></div>
+    <span class="diagram-plus" aria-hidden="true">+</span>
+    <div><strong>Linux interface</strong><small>compiled for the target kernel</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><code>nvidia-modeset.ko</code><small>display engine control</small></div>
+  </div>
+  <div class="module-build-row module-build-native">
+    <div><strong>Linux DRM/KMS glue</strong><small>kernel-facing implementation</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><code>nvidia-drm.ko</code><small>DRM bridge</small></div>
+  </div>
+  <div class="module-build-row module-build-native">
+    <div><strong>Linux UVM/HMM code</strong><small>kernel-facing implementation</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><code>nvidia-uvm.ko</code><small>virtual memory</small></div>
+  </div>
+  <div class="module-build-row module-build-native">
+    <div><strong>RDMA peer-memory glue</strong><small>kernel-facing implementation</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><code>nvidia-peermem.ko</code><small>GPUDirect RDMA</small></div>
+  </div>
+</figure>
 
 The build is more than compiling against a directory named after `uname -r`.
 NVIDIA runs a large set of compile and symbol probes—its `conftest` layer—to
@@ -62,21 +139,14 @@ This explains a common misconception: DKMS does not provide a stable ABI. It
 automates rebuilding against an unstable one, while the driver's compatibility
 layer absorbs the API churn it knows about.
 
-## The state machine DKMS owns
+## The lifecycle DKMS owns
 
-Ignoring distribution-specific paths, the useful DKMS state machine is:
-
-```text
-/usr/src/nvidia-<driver-version>/
-          │
-          ├─ add ───────> source registered in the DKMS tree
-          │
-          ├─ build -k <kernel>/<arch>
-          │                └─ conftest → Kbuild → MODPOST → *.ko
-          │
-          └─ install ───> /lib/modules/<kernel>/.../*.ko[.xz|.zst]
-                                         └─ depmod database update
-```
+The first three stages in the opening diagram are the useful DKMS state
+machine. `add` registers a source/version pair from
+`/usr/src/nvidia-<driver-version>/`. `build -k <kernel>/<arch>` produces
+artifacts for one kernel and architecture through conftest, Kbuild, and
+MODPOST. `install` copies the resulting `*.ko[.xz|.zst]` files into that
+kernel's module tree and refreshes the depmod database.
 
 `dkms status` distinguishes these states. **Built** means artifacts exist for a
 kernel/architecture pair. **Installed** means DKMS placed them in that kernel's
@@ -118,19 +188,38 @@ evidence that the module was built against a different contract.
 
 At runtime the NVIDIA modules form a dependency graph, not a flat list:
 
-```text
-userspace CUDA / NVML
-    ├─ ioctl + mmap ─> /dev/nvidiactl, /dev/nvidiaN ─> nvidia.ko (RM)
-    └─ ioctl + mmap ─> /dev/nvidia-uvm ──────────────> nvidia-uvm.ko
-                                                           │
-                                                           └─ RM UVM interface
-
-Xorg / Wayland compositor / GBM
-    ├─ /dev/nvidia-modeset ─> nvidia-modeset.ko (NVKMS) ─> nvidia.ko
-    └─ /dev/dri/card* ──────> nvidia-drm.ko ─────────────> NVKMS + DRM core
-
-GPUDirect RDMA ─────────────> nvidia-peermem.ko ─────────> RM + RDMA peer memory
-```
+<figure class="system-diagram runtime-diagram" aria-labelledby="runtime-path-title">
+  <figcaption id="runtime-path-title">
+    <strong>Three runtime paths share RM but fail independently</strong>
+    <span>The arrows show the primary control path, not every internal call.</span>
+  </figcaption>
+  <div class="runtime-lane">
+    <span class="runtime-label">Compute</span>
+    <div><strong>CUDA / NVML</strong><small>userspace</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div><code>/dev/nvidia*</code><small>ioctl · mmap</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><code>nvidia.ko</code><small>RM · PCI · GPU control</small></div>
+    <div class="runtime-branch"><code>/dev/nvidia-uvm</code><span aria-hidden="true">→</span><code>nvidia-uvm.ko</code><span aria-hidden="true">→</span><span>RM interface</span></div>
+  </div>
+  <div class="runtime-lane">
+    <span class="runtime-label">Display</span>
+    <div><strong>Xorg / Wayland / GBM</strong><small>userspace</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div><code>/dev/dri/card*</code><small>DRM device</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><code>nvidia-drm.ko</code><small>DRM/KMS registration</small></div>
+    <div class="runtime-branch"><span>DRM core</span><span aria-hidden="true">↔</span><code>nvidia-drm.ko</code><span aria-hidden="true">→</span><code>nvidia-modeset.ko</code><span aria-hidden="true">→</span><code>nvidia.ko</code></div>
+  </div>
+  <div class="runtime-lane">
+    <span class="runtime-label">RDMA</span>
+    <div><strong>GPUDirect RDMA</strong><small>peer-memory client</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div><code>nvidia-peermem.ko</code><small>peer-memory glue</small></div>
+    <span class="diagram-arrow" aria-hidden="true">→</span>
+    <div class="diagram-output"><strong>RM + RDMA core</strong><small>shared boundary</small></div>
+  </div>
+</figure>
 
 The open `nvidia.ko` source shows the boundary directly: it registers the PCI
 driver, initializes RM, exposes character-device operations including `ioctl`
