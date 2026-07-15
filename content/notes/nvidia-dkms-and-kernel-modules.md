@@ -22,28 +22,11 @@ adaptation, exported kernel symbols, module signing, PCI probe, RM and GSP
 initialization, inter-module symbols, device nodes, and an exactly matched
 userspace stack.
 
-<figure class="system-diagram scope-diagram" aria-labelledby="dkms-scope-title">
-  <figcaption id="dkms-scope-title">
-    <strong>DKMS stops at installation</strong>
-    <span>A working GPU still depends on kernel acceptance, device initialization, and a matching userspace.</span>
-  </figcaption>
-  <div class="scope-lane scope-owned">
-    <div class="lane-heading"><span>DKMS-managed</span><small>build and install kernel objects</small></div>
-    <div class="scope-steps">
-      <div class="flow-node"><span class="diagram-kicker">01</span><strong>Register source</strong><small><code>/usr/src/nvidia-*</code></small></div>
-      <div class="flow-node"><span class="diagram-kicker">02</span><strong>Build for one kernel</strong><small>conftest → Kbuild → MODPOST</small></div>
-      <div class="flow-node"><span class="diagram-kicker">03</span><strong>Install modules</strong><small><code>/lib/modules/...</code> + depmod</small></div>
-    </div>
-  </div>
-  <div class="scope-handoff"><span>DKMS ends here</span></div>
-  <div class="scope-lane scope-external">
-    <div class="lane-heading"><span>Runtime validation</span><small>performed by the kernel and driver stack</small></div>
-    <div class="scope-steps">
-      <div class="flow-node"><span class="diagram-kicker">04</span><strong>Accept the module</strong><small>ABI · symbols · signature</small></div>
-      <div class="flow-node"><span class="diagram-kicker">05</span><strong>Bring up the GPU</strong><small>PCI probe · RM · GSP</small></div>
-      <div class="flow-node"><span class="diagram-kicker">06</span><strong>Open a context</strong><small>device nodes · matching libraries</small></div>
-    </div>
-  </div>
+<figure class="architecture-diagram">
+  <a href="/diagrams/nvidia-dkms-boundary.svg" aria-label="Open the full-size DKMS boundary architecture diagram">
+    <img src="/diagrams/nvidia-dkms-boundary.svg" alt="Architecture diagram separating the DKMS build and install boundary from running-kernel validation, NVIDIA device initialization, and userspace libraries." />
+  </a>
+  <figcaption>DKMS produces and installs kernel objects. Kernel admission, RM/GSP initialization, device interfaces, and userspace compatibility remain separate runtime boundaries.</figcaption>
 </figure>
 
 ## What NVIDIA actually rebuilds
@@ -57,24 +40,11 @@ source, but preserves the same architectural boundary. `nvidia-drm.ko` and
 `nvidia-uvm.ko` are Linux-facing implementations and do not have those
 OS-agnostic binary components.
 
-<figure class="system-diagram module-build-diagram" aria-labelledby="module-build-title">
-  <figcaption id="module-build-title">
-    <strong>What becomes each NVIDIA kernel module</strong>
-    <span>The proprietary package links prebuilt cores only for RM and NVKMS; the other modules are Linux-facing implementations.</span>
-  </figcaption>
-  <div class="module-group">
-    <div class="lane-heading"><span>Portable core + Linux interface</span><small>linked together for the target kernel</small></div>
-    <div class="module-row"><div><strong>RM core</strong><small><code>nv-kernel.o_binary</code></small></div><span aria-hidden="true">+</span><div><strong>Linux interface</strong><small>kernel-specific objects</small></div><span aria-hidden="true">→</span><div class="diagram-output"><code>nvidia.ko</code><small>resource manager</small></div></div>
-    <div class="module-row"><div><strong>NVKMS core</strong><small><code>nv-modeset-kernel.o_binary</code></small></div><span aria-hidden="true">+</span><div><strong>Linux interface</strong><small>kernel-specific objects</small></div><span aria-hidden="true">→</span><div class="diagram-output"><code>nvidia-modeset.ko</code><small>display control</small></div></div>
-  </div>
-  <div class="module-group">
-    <div class="lane-heading"><span>Linux-facing implementation</span><small>no OS-agnostic binary core</small></div>
-    <div class="native-modules">
-      <div><strong>DRM/KMS glue</strong><span aria-hidden="true">→</span><code>nvidia-drm.ko</code></div>
-      <div><strong>UVM/HMM</strong><span aria-hidden="true">→</span><code>nvidia-uvm.ko</code></div>
-      <div><strong>RDMA peer memory</strong><span aria-hidden="true">→</span><code>nvidia-peermem.ko</code></div>
-    </div>
-  </div>
+<figure class="architecture-diagram architecture-diagram-wide">
+  <a href="/diagrams/nvidia-module-build.svg" aria-label="Open the full-size NVIDIA kernel module build architecture diagram">
+    <img src="/diagrams/nvidia-module-build.svg" alt="Architecture diagram showing how the target kernel contract, portable RM and NVKMS cores, and Linux-facing implementations become five NVIDIA kernel modules." />
+  </a>
+  <figcaption>The proprietary RM and NVKMS modules link portable binary cores with Linux interface objects. DRM, UVM, and peer-memory modules are Linux-facing implementations.</figcaption>
 </figure>
 
 The build is more than compiling against a directory named after `uname -r`.
@@ -143,14 +113,11 @@ evidence that the module was built against a different contract.
 
 At runtime the NVIDIA modules form a dependency graph, not a flat list:
 
-<figure class="system-diagram runtime-diagram" aria-labelledby="runtime-path-title">
-  <figcaption id="runtime-path-title">
-    <strong>Compute, display, and RDMA take different paths</strong>
-    <span>All eventually depend on <code>nvidia.ko</code> (RM), but each path can fail independently.</span>
-  </figcaption>
-  <div class="runtime-row"><span class="runtime-label">Compute</span><div class="runtime-flow"><div><strong>CUDA / NVML</strong><small>userspace</small></div><div><code>/dev/nvidia*</code><small>ioctl · mmap</small></div><div><code>nvidia.ko</code><small>RM</small></div></div><div class="runtime-note"><code>nvidia-uvm.ko</code> adds managed-memory and GPU VA services through RM.</div></div>
-  <div class="runtime-row"><span class="runtime-label">Display</span><div class="runtime-flow"><div><strong>Wayland / Xorg</strong><small>userspace</small></div><div><code>nvidia-drm.ko</code><small>DRM/KMS</small></div><div><code>nvidia-modeset.ko</code><small>NVKMS → RM</small></div></div></div>
-  <div class="runtime-row"><span class="runtime-label">RDMA</span><div class="runtime-flow"><div><strong>RDMA client</strong><small>peer-memory API</small></div><div><code>nvidia-peermem.ko</code><small>glue</small></div><div><strong>RM + RDMA core</strong><small>shared boundary</small></div></div></div>
+<figure class="architecture-diagram">
+  <a href="/diagrams/nvidia-runtime-architecture.svg" aria-label="Open the full-size NVIDIA runtime architecture diagram">
+    <img src="/diagrams/nvidia-runtime-architecture.svg" alt="Layered architecture diagram connecting CUDA, display, and RDMA userspace clients through Linux device interfaces to NVIDIA kernel modules, Linux kernel subsystems, GSP-RM firmware, and GPU hardware." />
+  </a>
+  <figcaption>Compute, display, and RDMA enter through different device interfaces and kernel modules. They converge on RM while retaining independent failure boundaries.</figcaption>
 </figure>
 
 The open `nvidia.ko` source shows the boundary directly: it registers the PCI
