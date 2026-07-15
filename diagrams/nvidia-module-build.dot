@@ -1,0 +1,85 @@
+digraph module_build {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad="0.25",
+    nodesep="0.42",
+    ranksep="0.52",
+    splines=ortho,
+    fontname="Arial",
+    fontsize=12,
+    fontcolor="#17201a"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#f4f1e8",
+    color="#aeb5aa",
+    penwidth=1.15,
+    fontname="Arial",
+    fontsize=10.5,
+    fontcolor="#17201a",
+    margin="0.18,0.11"
+  ];
+  edge [color="#5d675f", penwidth=1.2, arrowsize=0.65];
+
+  contract [
+    label="Target kernel contract\nheaders · config · Module.symvers",
+    shape=component,
+    fillcolor="#ebe8dc"
+  ];
+
+  subgraph cluster_portable {
+    label="PORTABLE DRIVER CORE + LINUX INTERFACE";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#6f942e";
+    fillcolor="#edf1df";
+    penwidth=1.5;
+    margin=18;
+
+    portable_build [label="Kbuild + compiler + MODPOST", fillcolor="#e4ecd0", color="#6f942e"];
+    rm_unit [label="RM core\nnv-kernel.o_binary\n+ Linux interface"];
+    modeset_unit [label="NVKMS core\nnv-modeset-kernel.o_binary\n+ Linux interface"];
+    nvidia [label="nvidia.ko\nresource manager", fillcolor="#eef3e8", color="#6f942e"];
+    modeset [label="nvidia-modeset.ko\ndisplay control"];
+
+    { rank=same; rm_unit; modeset_unit; }
+    { rank=same; nvidia; modeset; }
+    portable_build -> rm_unit;
+    portable_build -> modeset_unit;
+    rm_unit -> nvidia;
+    modeset_unit -> modeset;
+  }
+
+  subgraph cluster_linux {
+    label="LINUX-FACING IMPLEMENTATIONS";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#ebe8dc";
+    margin=18;
+
+    linux_build [label="Kbuild + compiler + MODPOST"];
+    drm_unit [label="DRM/KMS source"];
+    uvm_unit [label="UVM/HMM source"];
+    peer_unit [label="Peer-memory source"];
+    drm [label="nvidia-drm.ko\nDRM bridge"];
+    uvm [label="nvidia-uvm.ko\nGPU virtual memory"];
+    peer [label="nvidia-peermem.ko\nGPUDirect RDMA"];
+
+    { rank=same; drm_unit; uvm_unit; peer_unit; }
+    { rank=same; drm; uvm; peer; }
+    linux_build -> drm_unit;
+    linux_build -> uvm_unit;
+    linux_build -> peer_unit;
+    drm_unit -> drm;
+    uvm_unit -> uvm;
+    peer_unit -> peer;
+  }
+
+  contract -> portable_build;
+  contract -> linux_build;
+}
