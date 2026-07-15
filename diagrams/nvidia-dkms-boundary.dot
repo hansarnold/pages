@@ -1,0 +1,93 @@
+digraph dkms_boundary {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad="0.25",
+    nodesep="0.34",
+    ranksep="0.55",
+    splines=ortho,
+    fontname="Arial",
+    fontsize=12,
+    fontcolor="#17201a"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#f4f1e8",
+    color="#aeb5aa",
+    penwidth=1.2,
+    fontname="Arial",
+    fontsize=10.5,
+    fontcolor="#17201a",
+    margin="0.16,0.11"
+  ];
+  edge [
+    color="#5d675f",
+    penwidth=1.25,
+    arrowsize=0.7,
+    fontname="Arial",
+    fontsize=9,
+    fontcolor="#5d675f"
+  ];
+
+  subgraph cluster_build {
+    label="DKMS BUILD + INSTALL BOUNDARY";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#6f942e";
+    fillcolor="#edf1df";
+    penwidth=1.5;
+    margin=18;
+
+    source [label="Driver source\n/usr/src/nvidia-<version>"];
+    conftest [label="API discovery\nconftest probes"];
+    kbuild [label="Kernel build\nKbuild + compiler"];
+    modpost [label="ABI validation\nMODPOST"];
+    artifacts [label="Installed objects\n*.ko + depmod", fillcolor="#e4ecd0", color="#6f942e"];
+
+    source -> conftest -> kbuild -> modpost -> artifacts;
+  }
+
+  kernel_contract [
+    label="Target kernel contract\nheaders · config · Module.symvers",
+    shape=component,
+    fillcolor="#ebe8dc"
+  ];
+  kernel_contract -> conftest;
+  kernel_contract -> kbuild;
+  kernel_contract -> modpost;
+
+  subgraph cluster_runtime {
+    label="RUNNING KERNEL + DRIVER RUNTIME (OUTSIDE DKMS)";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#ebe8dc";
+    penwidth=1.2;
+    margin=18;
+
+    load [label="Load-time policy\nvermagic · CRCs · symbols · signature"];
+    modules [label="Loaded NVIDIA modules\ninter-module ABI"];
+    init [label="Device initialization\nPCI probe · RM · GSP firmware"];
+    devices [label="Kernel interfaces\n/dev/nvidia* · /dev/dri/*", fillcolor="#f4f1e8"];
+
+    load -> modules -> init -> devices;
+  }
+
+  userspace [
+    label="Userspace driver stack\nlibcuda · NVML · display libraries",
+    shape=component,
+    fillcolor="#eef3e8",
+    color="#6f942e"
+  ];
+
+  artifacts -> load [
+    label=" DKMS ends here ",
+    color="#4f7f10",
+    fontcolor="#4f7f10",
+    penwidth=2.2
+  ];
+  devices -> userspace [dir=both, arrowtail=normal];
+}
