@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="790" viewBox="0 0 1280 790" role="img" aria-labelledby="title desc">
+  <title id="title">Anatomy and load path of an NVIDIA kernel object</title>
+  <desc id="desc">A diagram showing important parts of a kernel module ELF file, including code, relocation records, modinfo, imported symbols, modversion CRCs and the appended signature, followed by the Linux module loader gates.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0L9 4.5L0 9Z" fill="#9bdc52"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#050706" flood-opacity="0.46"/>
+    </filter>
+    <style>
+      .bg { fill: #0b0f0c; }
+      .grid { stroke: #182019; stroke-width: 1; }
+      .panel { fill: #111713; stroke: #2b352d; stroke-width: 1.5; }
+      .section { fill: #151d17; stroke: #354239; stroke-width: 1; }
+      .section-accent { fill: #18251a; stroke: #6f9d42; stroke-width: 1.2; }
+      .signature { fill: #211d12; stroke: #bba75b; stroke-width: 1.2; }
+      .gate { fill: #111713; stroke: #405044; stroke-width: 1.5; }
+      .gate-accent { fill: #162018; stroke: #9bdc52; stroke-width: 2; }
+      text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+      .title { fill: #eef5ed; font-size: 30px; font-weight: 700; }
+      .subtitle { fill: #9aa49b; font-size: 15px; font-weight: 400; }
+      .eyebrow { fill: #9bdc52; font-size: 12px; font-weight: 700; letter-spacing: 1.6px; }
+      .heading { fill: #eef5ed; font-size: 18px; font-weight: 700; }
+      .body { fill: #c5cdc6; font-size: 13px; font-weight: 400; }
+      .small { fill: #a8b1aa; font-size: 11.5px; font-weight: 400; }
+      .muted { fill: #8e9990; font-size: 12px; font-weight: 400; }
+      .accent { fill: #9bdc52; font-size: 13px; font-weight: 700; }
+      .warn { fill: #d4c47b; font-size: 12px; font-weight: 700; }
+      .arrow { fill: none; stroke: #9bdc52; stroke-width: 2; marker-end: url(#arrow); }
+      .leader { fill: none; stroke: #59665c; stroke-width: 1.2; stroke-dasharray: 4 4; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1280" height="790" rx="18"/>
+  <g opacity="0.55">
+    <path class="grid" d="M0 50H1280M0 100H1280M0 150H1280M0 200H1280M0 250H1280M0 300H1280M0 350H1280M0 400H1280M0 450H1280M0 500H1280M0 550H1280M0 600H1280M0 650H1280M0 700H1280M0 750H1280"/>
+    <path class="grid" d="M50 0V790M100 0V790M150 0V790M200 0V790M250 0V790M300 0V790M350 0V790M400 0V790M450 0V790M500 0V790M550 0V790M600 0V790M650 0V790M700 0V790M750 0V790M800 0V790M850 0V790M900 0V790M950 0V790M1000 0V790M1050 0V790M1100 0V790M1150 0V790M1200 0V790M1250 0V790"/>
+  </g>
+
+  <text class="eyebrow" x="56" y="55">OBJECT INSPECTION / LOAD-TIME CONTRACT</text>
+  <text class="title" x="56" y="94">An NVIDIA .ko is evidence, not a promise</text>
+  <text class="subtitle" x="56" y="124">Kbuild records expectations in and around ELF; the running kernel validates them again.</text>
+
+  <g filter="url(#shadow)">
+    <rect class="panel" x="56" y="170" width="418" height="542" rx="12"/>
+    <text class="heading" x="80" y="204">nvidia.ko</text>
+    <text class="muted" x="366" y="203">ET_REL / relocatable</text>
+
+    <rect class="section" x="80" y="224" width="370" height="68" rx="7"/>
+    <text class="accent" x="98" y="249">.text / .rodata / .data</text>
+    <text class="small" x="98" y="274">code and state; final virtual addresses unknown</text>
+
+    <rect class="section" x="80" y="302" width="370" height="68" rx="7"/>
+    <text class="accent" x="98" y="327">relocation sections + symbol table</text>
+    <text class="small" x="98" y="352">patch references after kernel memory is allocated</text>
+
+    <rect class="section-accent" x="80" y="380" width="370" height="82" rx="7"/>
+    <text class="accent" x="98" y="405">.modinfo</text>
+    <text class="small" x="98" y="430">vermagic · depends · aliases · parameters</text>
+    <text class="small" x="98" y="449">license · version · srcversion</text>
+
+    <rect class="section" x="80" y="472" width="370" height="74" rx="7"/>
+    <text class="accent" x="98" y="497">undefined imports</text>
+    <text class="small" x="98" y="521">must resolve in vmlinux or loaded providers</text>
+
+    <rect class="section-accent" x="80" y="556" width="370" height="64" rx="7"/>
+    <text class="accent" x="98" y="581">__versions / extended modversions</text>
+    <text class="small" x="98" y="604">expected CRC per imported symbol when enabled</text>
+
+    <rect class="signature" x="80" y="630" width="370" height="58" rx="7"/>
+    <text class="warn" x="98" y="655">appended signature trailer — outside ELF</text>
+    <text class="small" x="98" y="676">sign after stripping; compress only afterwards</text>
+  </g>
+
+  <path class="arrow" d="M474 441H548"/>
+  <text class="muted" x="493" y="427">finit_module()</text>
+
+  <text class="eyebrow" x="570" y="180">KERNEL MODULE LOADER</text>
+
+  <g filter="url(#shadow)">
+    <rect class="gate" x="566" y="205" width="282" height="75" rx="9"/>
+    <text class="heading" x="588" y="234">1 / parse + decompress</text>
+    <text class="small" x="588" y="258">recognize the object; validate ELF structure</text>
+
+    <rect class="gate" x="566" y="302" width="282" height="75" rx="9"/>
+    <text class="heading" x="588" y="331">2 / identity gates</text>
+    <text class="small" x="588" y="355">vermagic, architecture, module policy</text>
+
+    <rect class="gate" x="566" y="399" width="282" height="75" rx="9"/>
+    <text class="heading" x="588" y="428">3 / trust gate</text>
+    <text class="small" x="588" y="452">signature integrity and trusted keyrings</text>
+
+    <rect class="gate" x="566" y="496" width="282" height="75" rx="9"/>
+    <text class="heading" x="588" y="525">4 / link contract</text>
+    <text class="small" x="588" y="549">imports, namespaces and modversion CRCs</text>
+
+    <rect class="gate-accent" x="566" y="593" width="282" height="95" rx="9"/>
+    <text class="heading" x="588" y="622">5 / relocate + initialize</text>
+    <text class="small" x="588" y="646">allocate memory, patch references, call init</text>
+    <text class="accent" x="588" y="670">accepted bytes become resident code</text>
+  </g>
+
+  <path class="arrow" d="M707 280V290"/>
+  <path class="arrow" d="M707 377V387"/>
+  <path class="arrow" d="M707 474V484"/>
+  <path class="arrow" d="M707 571V581"/>
+
+  <g filter="url(#shadow)">
+    <rect class="panel" x="908" y="205" width="318" height="182" rx="10"/>
+    <text class="eyebrow" x="932" y="236">PROVIDERS</text>
+    <text class="heading" x="932" y="268">running kernel + modules</text>
+    <text class="body" x="932" y="301">vmlinux exported symbols</text>
+    <text class="body" x="932" y="329">nvidia core private exports</text>
+    <text class="body" x="932" y="357">symbol namespaces + CRCs</text>
+  </g>
+
+  <path class="leader" d="M908 325H874V533H848"/>
+
+  <g filter="url(#shadow)">
+    <rect class="panel" x="908" y="425" width="318" height="263" rx="10"/>
+    <text class="eyebrow" x="932" y="456">AFTER MODULE_INIT</text>
+    <text class="heading" x="932" y="488">new failure boundaries appear</text>
+    <text class="body" x="932" y="524">PCI probe and device ownership</text>
+    <text class="body" x="932" y="554">GSP firmware load / handshake</text>
+    <text class="body" x="932" y="584">inter-module NVIDIA ABI</text>
+    <text class="body" x="932" y="614">user-space driver pairing</text>
+    <line x1="932" y1="636" x2="1199" y2="636" stroke="#354239"/>
+    <text class="muted" x="932" y="662">A loadable .ko can still fail here.</text>
+  </g>
+
+  <path class="arrow" d="M848 640H896"/>
+
+  <text class="muted" x="56" y="752">Presence on disk proves only that a file exists. Loader acceptance proves only the next boundary.</text>
+  <text class="accent" x="56" y="775">Inspect the object, the providers, and the running state separately.</text>
+</svg>

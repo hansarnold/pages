@@ -23,6 +23,13 @@ The useful question is therefore not “did DKMS work?” It is:
 
 That question turns a vague driver problem into a sequence of inspectable state transitions.
 
+<figure class="systems-figure systems-figure-wide">
+  <a href="/diagrams/dkms-contract-map.svg" aria-label="Open the full-size DKMS contract map">
+    <img src="/diagrams/dkms-contract-map.svg" alt="DKMS contract map from NVIDIA package source through DKMS and Kbuild to the real root, initramfs, kernel loader, firmware, and user space" width="1280" height="850" loading="eager" decoding="async" />
+  </a>
+  <figcaption>Figure 1. DKMS owns state and orchestration. Compatibility, early-boot selection, loader trust, firmware initialization, and user-space pairing are enforced elsewhere.</figcaption>
+</figure>
+
 ## DKMS Manages Materialization, Not Compatibility
 
 An out-of-tree module lives outside the kernel source tree that produced the target kernel. It therefore has to be materialized again whenever the build contract changes. That contract is wider than a function prototype list. It includes:
@@ -133,6 +140,13 @@ Kbuild then compiles translation units and runs `modpost`. `modpost` consumes sy
 ## What the `.ko` Actually Carries
 
 A kernel object is useful to reason about as four overlapping contracts.
+
+<figure class="systems-figure systems-figure-wide">
+  <a href="/diagrams/nvidia-ko-anatomy.svg" aria-label="Open the full-size NVIDIA kernel object anatomy diagram">
+    <img src="/diagrams/nvidia-ko-anatomy.svg" alt="Anatomy of an NVIDIA kernel object showing ELF sections, modinfo, symbol imports, modversion CRCs, the appended signature, and the Linux loader gates" width="1280" height="790" loading="lazy" decoding="async" />
+  </a>
+  <figcaption>Figure 2. A <code>.ko</code> records expectations about its target. The running kernel independently validates those expectations before NVIDIA-specific initialization begins.</figcaption>
+</figure>
 
 ### ELF structure
 
