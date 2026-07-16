@@ -13,6 +13,7 @@
 		"postbuild": "pagefind --site dist",
 		"preview": "astro preview",
 		"check": "astro check && biome check",
+		"render:diagrams": "node scripts/render-diagrams.mjs",
 		"lint": "biome check --write",
 		"format": "prettier -w . --cache"
 	},
@@ -47,6 +48,7 @@
 		"@types/hast": "^3.0.5",
 		"@types/mdast": "^4.0.4",
 		"@types/node": "^26.1.1",
+		"@viz-js/viz": "^3.28.0",
 		"autoprefixer": "^10.5.2",
 		"pagefind": "^1.5.2",
 		"prettier": "^3.9.5",

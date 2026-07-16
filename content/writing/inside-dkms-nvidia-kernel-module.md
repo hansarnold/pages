@@ -23,11 +23,11 @@ The useful question is therefore not “did DKMS work?” It is:
 
 That question turns a vague driver problem into a sequence of inspectable state transitions.
 
-<figure class="systems-figure systems-figure-wide">
+<figure class="architecture-diagram architecture-diagram-wide">
   <a href="/diagrams/dkms-contract-map.svg" aria-label="Open the full-size DKMS contract map">
-    <img src="/diagrams/dkms-contract-map.svg" alt="DKMS contract map from NVIDIA package source through DKMS and Kbuild to the real root, initramfs, kernel loader, firmware, and user space" width="1280" height="850" loading="eager" decoding="async" />
+    <img src="/diagrams/dkms-contract-map.svg" alt="Software architecture flowchart from the NVIDIA driver package through DKMS and Kbuild, the real-root module tree and initramfs snapshot, then early or late module selection and the resident NVIDIA runtime" loading="eager" decoding="async" />
   </a>
-  <figcaption>Figure 1. DKMS owns state and orchestration. Compatibility, early-boot selection, loader trust, firmware initialization, and user-space pairing are enforced elsewhere.</figcaption>
+  <figcaption>Figure 1. DKMS ends at the installed module tree. Distribution policy materializes the initramfs snapshot; boot-time selection and the kernel loader decide which module set becomes resident.</figcaption>
 </figure>
 
 ## DKMS Manages Materialization, Not Compatibility
@@ -141,11 +141,11 @@ Kbuild then compiles translation units and runs `modpost`. `modpost` consumes sy
 
 A kernel object is useful to reason about as four overlapping contracts.
 
-<figure class="systems-figure systems-figure-wide">
+<figure class="architecture-diagram architecture-diagram-wide">
   <a href="/diagrams/nvidia-ko-anatomy.svg" aria-label="Open the full-size NVIDIA kernel object anatomy diagram">
-    <img src="/diagrams/nvidia-ko-anatomy.svg" alt="Anatomy of an NVIDIA kernel object showing ELF sections, modinfo, symbol imports, modversion CRCs, the appended signature, and the Linux loader gates" width="1280" height="790" loading="lazy" decoding="async" />
+    <img src="/diagrams/nvidia-ko-anatomy.svg" alt="Software flowchart from NVIDIA source and the target kernel contract through conftest, Kbuild, MODPOST, linking, signing and compression, followed by the kernel identity, trust and symbol admission gates" loading="lazy" decoding="async" />
   </a>
-  <figcaption>Figure 2. A <code>.ko</code> records expectations about its target. The running kernel independently validates those expectations before NVIDIA-specific initialization begins.</figcaption>
+  <figcaption>Figure 2. Kbuild materializes the object and its metadata; the running kernel independently evaluates identity, trust, symbols, CRCs and relocations before NVIDIA-specific initialization begins.</figcaption>
 </figure>
 
 ### ELF structure

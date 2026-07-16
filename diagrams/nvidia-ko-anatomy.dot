@@ -1,0 +1,203 @@
+digraph nvidia_ko_admission {
+  graph [
+    rankdir=TB,
+    bgcolor="transparent",
+    pad="0.25",
+    nodesep="0.38",
+    ranksep="0.5",
+    splines=ortho,
+    fontname="Arial",
+    fontsize=12,
+    fontcolor="#17201a"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#f4f1e8",
+    color="#aeb5aa",
+    penwidth=1.15,
+    fontname="Arial",
+    fontsize=10.5,
+    fontcolor="#17201a",
+    margin="0.17,0.11"
+  ];
+  edge [
+    color="#5d675f",
+    penwidth=1.2,
+    arrowsize=0.68,
+    fontname="Arial",
+    fontsize=8.5,
+    fontcolor="#5d675f"
+  ];
+
+  source [
+    label="NVIDIA module source\nLinux interface + RM/NVKMS core",
+    shape=folder
+  ];
+  kernel_build [
+    label="Target kernel build tree\ngenerated headers · config · Module.symvers",
+    shape=component,
+    fillcolor="#ebe8dc"
+  ];
+  { rank=same; source; kernel_build; }
+
+  subgraph cluster_build {
+    label="1  KBUILD MATERIALIZATION PIPELINE";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#6f942e";
+    fillcolor="#edf1df";
+    penwidth=1.5;
+    margin=18;
+
+    conftest [label="Discover target API\nNVIDIA conftest"];
+    compile [label="Compile objects\nKbuild + compiler"];
+    modpost [label="Resolve build-time ABI\nMODPOST"];
+    link [label="Link relocatable module\nET_REL nvidia.ko"];
+
+    elf [
+      shape=record,
+      style="filled",
+      fillcolor="#eef3e8",
+      color="#6f942e",
+      label="{nvidia.ko before signing|code + data + relocations|.modinfo / vermagic / aliases|undefined imports + __versions}"
+    ];
+    strip [label="Strip debug data\naccording to package policy"];
+    sign [label="Append module signature\nsign-file / distro key"];
+    compress [label="Compress for module tree\n.zst / .xz / none"];
+    installed [
+      label="Installed module object\n/lib/modules/<K>/.../nvidia.ko.*",
+      shape=component,
+      fillcolor="#e4ecd0",
+      color="#6f942e",
+      group=main
+    ];
+
+    conftest -> compile -> modpost -> link -> elf;
+    elf -> strip -> sign -> compress -> installed;
+    { rank=same; conftest; compile; modpost; }
+  }
+
+  source -> conftest;
+  kernel_build -> conftest [style=dashed];
+  kernel_build -> compile [style=dashed, constraint=false];
+  kernel_build -> modpost [style=dashed, constraint=false];
+
+  subgraph cluster_loader {
+    label="2  RUNNING-KERNEL ADMISSION PIPELINE";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#ebe8dc";
+    margin=18;
+
+    read [label="Read selected module\nmodprobe → finit_module(2)", group=main];
+    decompress [label="Decompress and parse ELF", group=main];
+    identity [
+      label="Architecture +\nvermagic match?",
+      shape=diamond,
+      style="filled",
+      fillcolor="#f4f1e8",
+      group=main
+    ];
+    trust [
+      label="Signature valid\nand key trusted?",
+      shape=diamond,
+      style="filled",
+      fillcolor="#f4f1e8",
+      group=main
+    ];
+    symbols [
+      label="Imports resolve and\nmodversion CRCs match?",
+      shape=diamond,
+      style="filled",
+      fillcolor="#f4f1e8",
+      group=main
+    ];
+    relocate [label="Allocate module memory\nand apply relocations", group=main];
+    module_init [
+      label="Invoke module_init\nmodule becomes resident",
+      fillcolor="#e4ecd0",
+      color="#6f942e",
+      group=main
+    ];
+    reject [
+      label="Reject load\nreturn errno + kernel log",
+      shape=octagon,
+      fillcolor="#f3eed9",
+      color="#ad9847"
+    ];
+    identity_policy [
+      label="Running-kernel identity\nrelease · arch · build flags",
+      shape=component,
+      fillcolor="#f0eee6"
+    ];
+    trust_policy [
+      label="Module trust policy\nSecure Boot · keyrings · lockdown",
+      shape=component,
+      fillcolor="#f0eee6"
+    ];
+    symbol_providers [
+      label="Live symbol providers\nvmlinux + loaded NVIDIA modules",
+      shape=component,
+      fillcolor="#f0eee6"
+    ];
+
+    read -> decompress -> identity;
+    identity -> trust [label=" yes "];
+    trust -> symbols [label=" yes "];
+    symbols -> relocate [label=" yes "];
+    relocate -> module_init;
+
+    identity -> reject [label=" no ", color="#9a7d24", fontcolor="#7c651d", constraint=false];
+    trust -> reject [label=" no ", color="#9a7d24", fontcolor="#7c651d", constraint=false];
+    symbols -> reject [label=" no ", color="#9a7d24", fontcolor="#7c651d"];
+    identity_policy -> identity [style=dashed, constraint=false];
+    trust_policy -> trust [style=dashed, constraint=false];
+    symbol_providers -> symbols [style=dashed, constraint=false];
+    { rank=same; identity_policy; identity; }
+    { rank=same; trust_policy; trust; }
+    { rank=same; symbol_providers; symbols; }
+  }
+
+  installed -> read [
+    label=" depmod index selects path ",
+    color="#4f7f10",
+    fontcolor="#4f7f10",
+    penwidth=1.8,
+    minlen=3,
+    weight=50
+  ];
+
+  subgraph cluster_runtime {
+    label="3  NVIDIA INITIALIZATION (AFTER LOADER ACCEPTANCE)";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#6f942e";
+    fillcolor="#edf1df";
+    penwidth=1.5;
+    margin=18;
+
+    probe [label="PCI bind and RM initialization"];
+    gsp [label="Load and negotiate GSP firmware"];
+    ready [
+      label="Expose driver interfaces\n/dev/nvidia* · dependent modules",
+      shape=component,
+      fillcolor="#eef3e8",
+      color="#6f942e"
+    ];
+
+    probe -> gsp -> ready;
+    { rank=same; probe; gsp; ready; }
+  }
+
+  module_init -> probe [
+    label=" loader succeeded; driver may still fail ",
+    color="#4f7f10",
+    fontcolor="#4f7f10",
+    penwidth=1.8
+  ];
+}

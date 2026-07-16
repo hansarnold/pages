@@ -1,136 +1,391 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="790" viewBox="0 0 1280 790" role="img" aria-labelledby="title desc">
-  <title id="title">Anatomy and load path of an NVIDIA kernel object</title>
-  <desc id="desc">A diagram showing important parts of a kernel module ELF file, including code, relocation records, modinfo, imported symbols, modversion CRCs and the appended signature, followed by the Linux module loader gates.</desc>
-  <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
-      <path d="M0 0L9 4.5L0 9Z" fill="#9bdc52"/>
-    </marker>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#050706" flood-opacity="0.46"/>
-    </filter>
-    <style>
-      .bg { fill: #0b0f0c; }
-      .grid { stroke: #182019; stroke-width: 1; }
-      .panel { fill: #111713; stroke: #2b352d; stroke-width: 1.5; }
-      .section { fill: #151d17; stroke: #354239; stroke-width: 1; }
-      .section-accent { fill: #18251a; stroke: #6f9d42; stroke-width: 1.2; }
-      .signature { fill: #211d12; stroke: #bba75b; stroke-width: 1.2; }
-      .gate { fill: #111713; stroke: #405044; stroke-width: 1.5; }
-      .gate-accent { fill: #162018; stroke: #9bdc52; stroke-width: 2; }
-      text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-      .title { fill: #eef5ed; font-size: 30px; font-weight: 700; }
-      .subtitle { fill: #9aa49b; font-size: 15px; font-weight: 400; }
-      .eyebrow { fill: #9bdc52; font-size: 12px; font-weight: 700; letter-spacing: 1.6px; }
-      .heading { fill: #eef5ed; font-size: 18px; font-weight: 700; }
-      .body { fill: #c5cdc6; font-size: 13px; font-weight: 400; }
-      .small { fill: #a8b1aa; font-size: 11.5px; font-weight: 400; }
-      .muted { fill: #8e9990; font-size: 12px; font-weight: 400; }
-      .accent { fill: #9bdc52; font-size: 13px; font-weight: 700; }
-      .warn { fill: #d4c47b; font-size: 12px; font-weight: 700; }
-      .arrow { fill: none; stroke: #9bdc52; stroke-width: 2; marker-end: url(#arrow); }
-      .leader { fill: none; stroke: #59665c; stroke-width: 1.2; stroke-dasharray: 4 4; }
-    </style>
-  </defs>
-
-  <rect class="bg" width="1280" height="790" rx="18"/>
-  <g opacity="0.55">
-    <path class="grid" d="M0 50H1280M0 100H1280M0 150H1280M0 200H1280M0 250H1280M0 300H1280M0 350H1280M0 400H1280M0 450H1280M0 500H1280M0 550H1280M0 600H1280M0 650H1280M0 700H1280M0 750H1280"/>
-    <path class="grid" d="M50 0V790M100 0V790M150 0V790M200 0V790M250 0V790M300 0V790M350 0V790M400 0V790M450 0V790M500 0V790M550 0V790M600 0V790M650 0V790M700 0V790M750 0V790M800 0V790M850 0V790M900 0V790M950 0V790M1000 0V790M1050 0V790M1100 0V790M1150 0V790M1200 0V790M1250 0V790"/>
-  </g>
-
-  <text class="eyebrow" x="56" y="55">OBJECT INSPECTION / LOAD-TIME CONTRACT</text>
-  <text class="title" x="56" y="94">An NVIDIA .ko is evidence, not a promise</text>
-  <text class="subtitle" x="56" y="124">Kbuild records expectations in and around ELF; the running kernel validates them again.</text>
-
-  <g filter="url(#shadow)">
-    <rect class="panel" x="56" y="170" width="418" height="542" rx="12"/>
-    <text class="heading" x="80" y="204">nvidia.ko</text>
-    <text class="muted" x="366" y="203">ET_REL / relocatable</text>
-
-    <rect class="section" x="80" y="224" width="370" height="68" rx="7"/>
-    <text class="accent" x="98" y="249">.text / .rodata / .data</text>
-    <text class="small" x="98" y="274">code and state; final virtual addresses unknown</text>
-
-    <rect class="section" x="80" y="302" width="370" height="68" rx="7"/>
-    <text class="accent" x="98" y="327">relocation sections + symbol table</text>
-    <text class="small" x="98" y="352">patch references after kernel memory is allocated</text>
-
-    <rect class="section-accent" x="80" y="380" width="370" height="82" rx="7"/>
-    <text class="accent" x="98" y="405">.modinfo</text>
-    <text class="small" x="98" y="430">vermagic · depends · aliases · parameters</text>
-    <text class="small" x="98" y="449">license · version · srcversion</text>
-
-    <rect class="section" x="80" y="472" width="370" height="74" rx="7"/>
-    <text class="accent" x="98" y="497">undefined imports</text>
-    <text class="small" x="98" y="521">must resolve in vmlinux or loaded providers</text>
-
-    <rect class="section-accent" x="80" y="556" width="370" height="64" rx="7"/>
-    <text class="accent" x="98" y="581">__versions / extended modversions</text>
-    <text class="small" x="98" y="604">expected CRC per imported symbol when enabled</text>
-
-    <rect class="signature" x="80" y="630" width="370" height="58" rx="7"/>
-    <text class="warn" x="98" y="655">appended signature trailer — outside ELF</text>
-    <text class="small" x="98" y="676">sign after stripping; compress only afterwards</text>
-  </g>
-
-  <path class="arrow" d="M474 441H548"/>
-  <text class="muted" x="493" y="427">finit_module()</text>
-
-  <text class="eyebrow" x="570" y="180">KERNEL MODULE LOADER</text>
-
-  <g filter="url(#shadow)">
-    <rect class="gate" x="566" y="205" width="282" height="75" rx="9"/>
-    <text class="heading" x="588" y="234">1 / parse + decompress</text>
-    <text class="small" x="588" y="258">recognize the object; validate ELF structure</text>
-
-    <rect class="gate" x="566" y="302" width="282" height="75" rx="9"/>
-    <text class="heading" x="588" y="331">2 / identity gates</text>
-    <text class="small" x="588" y="355">vermagic, architecture, module policy</text>
-
-    <rect class="gate" x="566" y="399" width="282" height="75" rx="9"/>
-    <text class="heading" x="588" y="428">3 / trust gate</text>
-    <text class="small" x="588" y="452">signature integrity and trusted keyrings</text>
-
-    <rect class="gate" x="566" y="496" width="282" height="75" rx="9"/>
-    <text class="heading" x="588" y="525">4 / link contract</text>
-    <text class="small" x="588" y="549">imports, namespaces and modversion CRCs</text>
-
-    <rect class="gate-accent" x="566" y="593" width="282" height="95" rx="9"/>
-    <text class="heading" x="588" y="622">5 / relocate + initialize</text>
-    <text class="small" x="588" y="646">allocate memory, patch references, call init</text>
-    <text class="accent" x="588" y="670">accepted bytes become resident code</text>
-  </g>
-
-  <path class="arrow" d="M707 280V290"/>
-  <path class="arrow" d="M707 377V387"/>
-  <path class="arrow" d="M707 474V484"/>
-  <path class="arrow" d="M707 571V581"/>
-
-  <g filter="url(#shadow)">
-    <rect class="panel" x="908" y="205" width="318" height="182" rx="10"/>
-    <text class="eyebrow" x="932" y="236">PROVIDERS</text>
-    <text class="heading" x="932" y="268">running kernel + modules</text>
-    <text class="body" x="932" y="301">vmlinux exported symbols</text>
-    <text class="body" x="932" y="329">nvidia core private exports</text>
-    <text class="body" x="932" y="357">symbol namespaces + CRCs</text>
-  </g>
-
-  <path class="leader" d="M908 325H874V533H848"/>
-
-  <g filter="url(#shadow)">
-    <rect class="panel" x="908" y="425" width="318" height="263" rx="10"/>
-    <text class="eyebrow" x="932" y="456">AFTER MODULE_INIT</text>
-    <text class="heading" x="932" y="488">new failure boundaries appear</text>
-    <text class="body" x="932" y="524">PCI probe and device ownership</text>
-    <text class="body" x="932" y="554">GSP firmware load / handshake</text>
-    <text class="body" x="932" y="584">inter-module NVIDIA ABI</text>
-    <text class="body" x="932" y="614">user-space driver pairing</text>
-    <line x1="932" y1="636" x2="1199" y2="636" stroke="#354239"/>
-    <text class="muted" x="932" y="662">A loadable .ko can still fail here.</text>
-  </g>
-
-  <path class="arrow" d="M848 640H896"/>
-
-  <text class="muted" x="56" y="752">Presence on disk proves only that a file exists. Loader acceptance proves only the next boundary.</text>
-  <text class="accent" x="56" y="775">Inspect the object, the providers, and the running state separately.</text>
+<!-- Generated by graphviz version 15.0.0 (20260523.1842)
+ -->
+<!-- Title: nvidia_ko_admission Pages: 1 -->
+<svg width="1078pt" height="1716pt"
+ viewBox="0.00 0.00 1078.00 1716.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-labelledby="nvidia-ko-anatomy-title nvidia-ko-anatomy-description">
+<title id="nvidia-ko-anatomy-title">NVIDIA kernel object build and admission flow</title>
+<desc id="nvidia-ko-anatomy-description">A flowchart from NVIDIA source and the target kernel build contract through Kbuild, MODPOST, linking, signing and compression, followed by kernel identity, trust, symbol and relocation gates before NVIDIA device initialization.</desc>
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(18 1698.42)">
+<title>nvidia_ko_admission</title>
+<g id="clust2" class="cluster">
+<title>cluster_build</title>
+<path fill="#edf1df" stroke="#6f942e" stroke-width="1.5" d="M84.33,-970.98C84.33,-970.98 554.33,-970.98 554.33,-970.98 560.33,-970.98 566.33,-976.98 566.33,-982.98 566.33,-982.98 566.33,-1600.38 566.33,-1600.38 566.33,-1606.38 560.33,-1612.38 554.33,-1612.38 554.33,-1612.38 84.33,-1612.38 84.33,-1612.38 78.33,-1612.38 72.33,-1606.38 72.33,-1600.38 72.33,-1600.38 72.33,-982.98 72.33,-982.98 72.33,-976.98 78.33,-970.98 84.33,-970.98"/>
+<text xml:space="preserve" text-anchor="middle" x="192.7" y="-1597.58" font-family="Arial" font-size="12.00" fill="#17201a">1 &#160;KBUILD MATERIALIZATION PIPELINE</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_loader</title>
+<path fill="#ebe8dc" stroke="#aeb5aa" d="M310.33,-133.64C310.33,-133.64 924.33,-133.64 924.33,-133.64 930.33,-133.64 936.33,-139.64 936.33,-145.64 936.33,-145.64 936.33,-856.78 936.33,-856.78 936.33,-862.78 930.33,-868.78 924.33,-868.78 924.33,-868.78 310.33,-868.78 310.33,-868.78 304.33,-868.78 298.33,-862.78 298.33,-856.78 298.33,-856.78 298.33,-145.64 298.33,-145.64 298.33,-139.64 304.33,-133.64 310.33,-133.64"/>
+<text xml:space="preserve" text-anchor="middle" x="431.03" y="-853.98" font-family="Arial" font-size="12.00" fill="#17201a">2 &#160;RUNNING&#45;KERNEL ADMISSION PIPELINE</text>
+</g>
+<g id="clust8" class="cluster">
+<title>cluster_runtime</title>
+<path fill="#edf1df" stroke="#6f942e" stroke-width="1.5" d="M376.33,-8C376.33,-8 1022.33,-8 1022.33,-8 1028.33,-8 1034.33,-14 1034.33,-20 1034.33,-20 1034.33,-95.44 1034.33,-95.44 1034.33,-101.44 1028.33,-107.44 1022.33,-107.44 1022.33,-107.44 376.33,-107.44 376.33,-107.44 370.33,-107.44 364.33,-101.44 364.33,-95.44 364.33,-95.44 364.33,-20 364.33,-20 364.33,-14 370.33,-8 376.33,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="539.02" y="-92.64" font-family="Arial" font-size="12.00" fill="#17201a">3 &#160;NVIDIA INITIALIZATION (AFTER LOADER ACCEPTANCE)</text>
+</g>
+<!-- source -->
+<g id="node1" class="node">
+<title>source</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="184.67,-1680.42 181.67,-1684.42 160.67,-1684.42 157.67,-1680.42 0,-1680.42 0,-1639.38 184.67,-1639.38 184.67,-1680.42"/>
+<text xml:space="preserve" text-anchor="middle" x="92.33" y="-1663.05" font-family="Arial" font-size="10.50" fill="#17201a">NVIDIA module source</text>
+<text xml:space="preserve" text-anchor="middle" x="92.33" y="-1650.45" font-family="Arial" font-size="10.50" fill="#17201a">Linux interface + RM/NVKMS core</text>
+</g>
+<!-- conftest -->
+<g id="node3" class="node">
+<title>conftest</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M192.8,-1571.98C192.8,-1571.98 101.87,-1571.98 101.87,-1571.98 95.87,-1571.98 89.87,-1565.98 89.87,-1559.98 89.87,-1559.98 89.87,-1542.94 89.87,-1542.94 89.87,-1536.94 95.87,-1530.94 101.87,-1530.94 101.87,-1530.94 192.8,-1530.94 192.8,-1530.94 198.8,-1530.94 204.8,-1536.94 204.8,-1542.94 204.8,-1542.94 204.8,-1559.98 204.8,-1559.98 204.8,-1565.98 198.8,-1571.98 192.8,-1571.98"/>
+<text xml:space="preserve" text-anchor="middle" x="147.33" y="-1554.61" font-family="Arial" font-size="10.50" fill="#17201a">Discover target API</text>
+<text xml:space="preserve" text-anchor="middle" x="147.33" y="-1542.01" font-family="Arial" font-size="10.50" fill="#17201a">NVIDIA conftest</text>
+</g>
+<!-- source&#45;&gt;conftest -->
+<g id="edge9" class="edge">
+<title>source&#45;&gt;conftest</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M137.27,-1638.99C137.27,-1638.99 137.27,-1580.92 137.27,-1580.92"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="139.65,-1580.92 137.27,-1574.12 134.89,-1580.92 139.65,-1580.92"/>
+</g>
+<!-- kernel_build -->
+<g id="node2" class="node">
+<title>kernel_build</title>
+<polygon fill="#ebe8dc" stroke="#aeb5aa" stroke-width="1.15" points="452.55,-1680.42 212.12,-1680.42 212.12,-1676.42 208.12,-1676.42 208.12,-1672.42 212.12,-1672.42 212.12,-1647.38 208.12,-1647.38 208.12,-1643.38 212.12,-1643.38 212.12,-1639.38 452.55,-1639.38 452.55,-1680.42"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="212.12,-1676.42 216.12,-1676.42 216.12,-1672.42 212.12,-1672.42"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="212.12,-1647.38 216.12,-1647.38 216.12,-1643.38 212.12,-1643.38"/>
+<text xml:space="preserve" text-anchor="middle" x="332.33" y="-1663.05" font-family="Arial" font-size="10.50" fill="#17201a">Target kernel build tree</text>
+<text xml:space="preserve" text-anchor="middle" x="332.33" y="-1650.45" font-family="Arial" font-size="10.50" fill="#17201a">generated headers · config · Module.symvers</text>
+</g>
+<!-- kernel_build&#45;&gt;conftest -->
+<g id="edge10" class="edge">
+<title>kernel_build&#45;&gt;conftest</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M211.6,-1660C201.32,-1660 194.73,-1660 194.73,-1660 194.73,-1660 194.73,-1581 194.73,-1581"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="197.11,-1581 194.73,-1574.2 192.35,-1581 197.11,-1581"/>
+</g>
+<!-- compile -->
+<g id="node4" class="node">
+<title>compile</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M351.99,-1571.98C351.99,-1571.98 270.68,-1571.98 270.68,-1571.98 264.68,-1571.98 258.68,-1565.98 258.68,-1559.98 258.68,-1559.98 258.68,-1542.94 258.68,-1542.94 258.68,-1536.94 264.68,-1530.94 270.68,-1530.94 270.68,-1530.94 351.99,-1530.94 351.99,-1530.94 357.99,-1530.94 363.99,-1536.94 363.99,-1542.94 363.99,-1542.94 363.99,-1559.98 363.99,-1559.98 363.99,-1565.98 357.99,-1571.98 351.99,-1571.98"/>
+<text xml:space="preserve" text-anchor="middle" x="311.33" y="-1554.61" font-family="Arial" font-size="10.50" fill="#17201a">Compile objects</text>
+<text xml:space="preserve" text-anchor="middle" x="311.33" y="-1542.01" font-family="Arial" font-size="10.50" fill="#17201a">Kbuild + compiler</text>
+</g>
+<!-- kernel_build&#45;&gt;compile -->
+<g id="edge11" class="edge">
+<title>kernel_build&#45;&gt;compile</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M311.33,-1638.99C311.33,-1638.99 311.33,-1580.92 311.33,-1580.92"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="313.71,-1580.92 311.33,-1574.12 308.95,-1580.92 313.71,-1580.92"/>
+</g>
+<!-- modpost -->
+<g id="node5" class="node">
+<title>modpost</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M536.68,-1571.98C536.68,-1571.98 429.99,-1571.98 429.99,-1571.98 423.99,-1571.98 417.99,-1565.98 417.99,-1559.98 417.99,-1559.98 417.99,-1542.94 417.99,-1542.94 417.99,-1536.94 423.99,-1530.94 429.99,-1530.94 429.99,-1530.94 536.68,-1530.94 536.68,-1530.94 542.68,-1530.94 548.68,-1536.94 548.68,-1542.94 548.68,-1542.94 548.68,-1559.98 548.68,-1559.98 548.68,-1565.98 542.68,-1571.98 536.68,-1571.98"/>
+<text xml:space="preserve" text-anchor="middle" x="483.33" y="-1554.61" font-family="Arial" font-size="10.50" fill="#17201a">Resolve build&#45;time ABI</text>
+<text xml:space="preserve" text-anchor="middle" x="483.33" y="-1542.01" font-family="Arial" font-size="10.50" fill="#17201a">MODPOST</text>
+</g>
+<!-- kernel_build&#45;&gt;modpost -->
+<g id="edge12" class="edge">
+<title>kernel_build&#45;&gt;modpost</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M435.27,-1638.99C435.27,-1638.99 435.27,-1580.92 435.27,-1580.92"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="437.65,-1580.92 435.27,-1574.12 432.89,-1580.92 437.65,-1580.92"/>
+</g>
+<!-- conftest&#45;&gt;compile -->
+<g id="edge1" class="edge">
+<title>conftest&#45;&gt;compile</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M205.15,-1551C205.15,-1551 249.53,-1551 249.53,-1551"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="249.53,-1553.38 256.33,-1551 249.53,-1548.62 249.53,-1553.38"/>
+</g>
+<!-- compile&#45;&gt;modpost -->
+<g id="edge2" class="edge">
+<title>compile&#45;&gt;modpost</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M364.34,-1551C364.34,-1551 408.83,-1551 408.83,-1551"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="408.83,-1553.38 415.63,-1551 408.83,-1548.62 408.83,-1553.38"/>
+</g>
+<!-- link -->
+<g id="node6" class="node">
+<title>link</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M531.02,-1493.94C531.02,-1493.94 419.64,-1493.94 419.64,-1493.94 413.64,-1493.94 407.64,-1487.94 407.64,-1481.94 407.64,-1481.94 407.64,-1464.9 407.64,-1464.9 407.64,-1458.9 413.64,-1452.9 419.64,-1452.9 419.64,-1452.9 531.02,-1452.9 531.02,-1452.9 537.02,-1452.9 543.02,-1458.9 543.02,-1464.9 543.02,-1464.9 543.02,-1481.94 543.02,-1481.94 543.02,-1487.94 537.02,-1493.94 531.02,-1493.94"/>
+<text xml:space="preserve" text-anchor="middle" x="475.33" y="-1476.57" font-family="Arial" font-size="10.50" fill="#17201a">Link relocatable module</text>
+<text xml:space="preserve" text-anchor="middle" x="475.33" y="-1463.97" font-family="Arial" font-size="10.50" fill="#17201a">ET_REL nvidia.ko</text>
+</g>
+<!-- modpost&#45;&gt;link -->
+<g id="edge3" class="edge">
+<title>modpost&#45;&gt;link</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M480.51,-1530.55C480.51,-1530.55 480.51,-1503.01 480.51,-1503.01"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="482.89,-1503.01 480.51,-1496.21 478.13,-1503.01 482.89,-1503.01"/>
+</g>
+<!-- elf -->
+<g id="node7" class="node">
+<title>elf</title>
+<polygon fill="#eef3e8" stroke="#6f942e" stroke-width="1.15" points="377.99,-1301.64 377.99,-1415.4 548.68,-1415.4 548.68,-1301.64 377.99,-1301.64"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1398.03" font-family="Arial" font-size="10.50" fill="#17201a">nvidia.ko before signing</text>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="377.99,-1386.96 548.68,-1386.96"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1369.59" font-family="Arial" font-size="10.50" fill="#17201a">code + data + relocations</text>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="377.99,-1358.52 548.68,-1358.52"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1341.15" font-family="Arial" font-size="10.50" fill="#17201a">.modinfo / vermagic / aliases</text>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="377.99,-1330.08 548.68,-1330.08"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1312.71" font-family="Arial" font-size="10.50" fill="#17201a">undefined imports + __versions</text>
+</g>
+<!-- link&#45;&gt;elf -->
+<g id="edge4" class="edge">
+<title>link&#45;&gt;elf</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M475.33,-1452.35C475.33,-1452.35 475.33,-1424.5 475.33,-1424.5"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="477.71,-1424.5 475.33,-1417.7 472.95,-1424.5 477.71,-1424.5"/>
+</g>
+<!-- strip -->
+<g id="node8" class="node">
+<title>strip</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M528.36,-1264.14C528.36,-1264.14 398.3,-1264.14 398.3,-1264.14 392.3,-1264.14 386.3,-1258.14 386.3,-1252.14 386.3,-1252.14 386.3,-1235.1 386.3,-1235.1 386.3,-1229.1 392.3,-1223.1 398.3,-1223.1 398.3,-1223.1 528.36,-1223.1 528.36,-1223.1 534.36,-1223.1 540.36,-1229.1 540.36,-1235.1 540.36,-1235.1 540.36,-1252.14 540.36,-1252.14 540.36,-1258.14 534.36,-1264.14 528.36,-1264.14"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1246.77" font-family="Arial" font-size="10.50" fill="#17201a">Strip debug data</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1234.17" font-family="Arial" font-size="10.50" fill="#17201a">according to package policy</text>
+</g>
+<!-- elf&#45;&gt;strip -->
+<g id="edge5" class="edge">
+<title>elf&#45;&gt;strip</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-1301.07C463.33,-1301.07 463.33,-1273.31 463.33,-1273.31"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-1273.31 463.33,-1266.51 460.95,-1273.31 465.71,-1273.31"/>
+</g>
+<!-- sign -->
+<g id="node9" class="node">
+<title>sign</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M523.41,-1186.1C523.41,-1186.1 403.26,-1186.1 403.26,-1186.1 397.26,-1186.1 391.26,-1180.1 391.26,-1174.1 391.26,-1174.1 391.26,-1157.06 391.26,-1157.06 391.26,-1151.06 397.26,-1145.06 403.26,-1145.06 403.26,-1145.06 523.41,-1145.06 523.41,-1145.06 529.41,-1145.06 535.41,-1151.06 535.41,-1157.06 535.41,-1157.06 535.41,-1174.1 535.41,-1174.1 535.41,-1180.1 529.41,-1186.1 523.41,-1186.1"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1168.73" font-family="Arial" font-size="10.50" fill="#17201a">Append module signature</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1156.13" font-family="Arial" font-size="10.50" fill="#17201a">sign&#45;file / distro key</text>
+</g>
+<!-- strip&#45;&gt;sign -->
+<g id="edge6" class="edge">
+<title>strip&#45;&gt;sign</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-1222.71C463.33,-1222.71 463.33,-1195.17 463.33,-1195.17"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-1195.17 463.33,-1188.37 460.95,-1195.17 465.71,-1195.17"/>
+</g>
+<!-- compress -->
+<g id="node10" class="node">
+<title>compress</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M524.26,-1108.06C524.26,-1108.06 402.4,-1108.06 402.4,-1108.06 396.4,-1108.06 390.4,-1102.06 390.4,-1096.06 390.4,-1096.06 390.4,-1079.02 390.4,-1079.02 390.4,-1073.02 396.4,-1067.02 402.4,-1067.02 402.4,-1067.02 524.26,-1067.02 524.26,-1067.02 530.26,-1067.02 536.26,-1073.02 536.26,-1079.02 536.26,-1079.02 536.26,-1096.06 536.26,-1096.06 536.26,-1102.06 530.26,-1108.06 524.26,-1108.06"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1090.69" font-family="Arial" font-size="10.50" fill="#17201a">Compress for module tree</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1078.09" font-family="Arial" font-size="10.50" fill="#17201a">.zst / .xz / none</text>
+</g>
+<!-- sign&#45;&gt;compress -->
+<g id="edge7" class="edge">
+<title>sign&#45;&gt;compress</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-1144.67C463.33,-1144.67 463.33,-1117.13 463.33,-1117.13"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-1117.13 463.33,-1110.33 460.95,-1117.13 465.71,-1117.13"/>
+</g>
+<!-- installed -->
+<g id="node11" class="node">
+<title>installed</title>
+<polygon fill="#e4ecd0" stroke="#6f942e" stroke-width="1.15" points="546.19,-1030.02 380.47,-1030.02 380.47,-1026.02 376.47,-1026.02 376.47,-1022.02 380.47,-1022.02 380.47,-996.98 376.47,-996.98 376.47,-992.98 380.47,-992.98 380.47,-988.98 546.19,-988.98 546.19,-1030.02"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="380.47,-1026.02 384.47,-1026.02 384.47,-1022.02 380.47,-1022.02"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="380.47,-996.98 384.47,-996.98 384.47,-992.98 380.47,-992.98"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1012.65" font-family="Arial" font-size="10.50" fill="#17201a">Installed module object</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-1000.05" font-family="Arial" font-size="10.50" fill="#17201a">/lib/modules/&lt;K&gt;/.../nvidia.ko.*</text>
+</g>
+<!-- compress&#45;&gt;installed -->
+<g id="edge8" class="edge">
+<title>compress&#45;&gt;installed</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-1066.63C463.33,-1066.63 463.33,-1039.09 463.33,-1039.09"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-1039.09 463.33,-1032.29 460.95,-1039.09 465.71,-1039.09"/>
+</g>
+<!-- read -->
+<g id="node12" class="node">
+<title>read</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M529.23,-828.38C529.23,-828.38 397.43,-828.38 397.43,-828.38 391.43,-828.38 385.43,-822.38 385.43,-816.38 385.43,-816.38 385.43,-799.34 385.43,-799.34 385.43,-793.34 391.43,-787.34 397.43,-787.34 397.43,-787.34 529.23,-787.34 529.23,-787.34 535.23,-787.34 541.23,-793.34 541.23,-799.34 541.23,-799.34 541.23,-816.38 541.23,-816.38 541.23,-822.38 535.23,-828.38 529.23,-828.38"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-811.01" font-family="Arial" font-size="10.50" fill="#17201a">Read selected module</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-798.41" font-family="Arial" font-size="10.50" fill="#17201a">modprobe → finit_module(2)</text>
+</g>
+<!-- installed&#45;&gt;read -->
+<g id="edge25" class="edge">
+<title>installed&#45;&gt;read</title>
+<path fill="none" stroke="#4f7f10" stroke-width="1.8" d="M463.33,-988.68C463.33,-988.68 463.33,-838.39 463.33,-838.39"/>
+<polygon fill="#4f7f10" stroke="#4f7f10" stroke-width="1.8" points="465.71,-838.39 463.33,-831.59 460.95,-838.39 465.71,-838.39"/>
+<text xml:space="preserve" text-anchor="middle" x="516.25" y="-917.33" font-family="Arial" font-size="8.50" fill="#4f7f10"> depmod index selects path </text>
+</g>
+<!-- decompress -->
+<g id="node13" class="node">
+<title>decompress</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M528.94,-750.34C528.94,-750.34 397.73,-750.34 397.73,-750.34 391.73,-750.34 385.73,-744.34 385.73,-738.34 385.73,-738.34 385.73,-726.34 385.73,-726.34 385.73,-720.34 391.73,-714.34 397.73,-714.34 397.73,-714.34 528.94,-714.34 528.94,-714.34 534.94,-714.34 540.94,-720.34 540.94,-726.34 540.94,-726.34 540.94,-738.34 540.94,-738.34 540.94,-744.34 534.94,-750.34 528.94,-750.34"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-729.19" font-family="Arial" font-size="10.50" fill="#17201a">Decompress and parse ELF</text>
+</g>
+<!-- read&#45;&gt;decompress -->
+<g id="edge13" class="edge">
+<title>read&#45;&gt;decompress</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-786.82C463.33,-786.82 463.33,-759.31 463.33,-759.31"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-759.31 463.33,-752.51 460.95,-759.31 465.71,-759.31"/>
+</g>
+<!-- identity -->
+<g id="node14" class="node">
+<title>identity</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="463.33,-677.34 358.91,-636.3 463.33,-595.26 567.76,-636.3 463.33,-677.34"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-639.45" font-family="Arial" font-size="10.50" fill="#17201a">Architecture +</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-626.85" font-family="Arial" font-size="10.50" fill="#17201a">vermagic match?</text>
+</g>
+<!-- decompress&#45;&gt;identity -->
+<g id="edge14" class="edge">
+<title>decompress&#45;&gt;identity</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-713.82C463.33,-713.82 463.33,-686.45 463.33,-686.45"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-686.45 463.33,-679.65 460.95,-686.45 465.71,-686.45"/>
+</g>
+<!-- trust -->
+<g id="node15" class="node">
+<title>trust</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="463.33,-549.06 361.22,-508.02 463.33,-466.98 565.45,-508.02 463.33,-549.06"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-511.17" font-family="Arial" font-size="10.50" fill="#17201a">Signature valid</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-498.57" font-family="Arial" font-size="10.50" fill="#17201a">and key trusted?</text>
+</g>
+<!-- identity&#45;&gt;trust -->
+<g id="edge15" class="edge">
+<title>identity&#45;&gt;trust</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-594.65C463.33,-594.65 463.33,-558.08 463.33,-558.08"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-558.08 463.33,-551.28 460.95,-558.08 465.71,-558.08"/>
+<text xml:space="preserve" text-anchor="middle" x="472.31" y="-569.61" font-family="Arial" font-size="8.50" fill="#5d675f"> yes </text>
+</g>
+<!-- reject -->
+<g id="node19" class="node">
+<title>reject</title>
+<path fill="#f3eed9" stroke="#ad9847" stroke-width="1.15" d="M770.06,-256.75C770.06,-256.75 770.06,-265.43 770.06,-265.43 770.06,-269.76 765.91,-275.35 761.75,-276.59 761.75,-276.59 717.02,-290.01 717.02,-290.01 712.87,-291.26 704.38,-292.5 700.04,-292.5 700.04,-292.5 630.63,-292.5 630.63,-292.5 626.29,-292.5 617.8,-291.26 613.65,-290.01 613.65,-290.01 568.91,-276.59 568.91,-276.59 564.76,-275.35 560.61,-269.76 560.61,-265.43 560.61,-265.43 560.61,-256.75 560.61,-256.75 560.61,-252.42 564.76,-246.83 568.91,-245.59 568.91,-245.59 613.65,-232.17 613.65,-232.17 617.8,-230.93 626.29,-229.68 630.63,-229.68 630.63,-229.68 700.04,-229.68 700.04,-229.68 704.38,-229.68 712.87,-230.93 717.02,-232.17 717.02,-232.17 761.75,-245.59 761.75,-245.59 765.91,-246.83 770.06,-252.42 770.06,-256.75"/>
+<text xml:space="preserve" text-anchor="middle" x="665.33" y="-264.24" font-family="Arial" font-size="10.50" fill="#17201a">Reject load</text>
+<text xml:space="preserve" text-anchor="middle" x="665.33" y="-251.64" font-family="Arial" font-size="10.50" fill="#17201a">return errno + kernel log</text>
+</g>
+<!-- identity&#45;&gt;reject -->
+<g id="edge19" class="edge">
+<title>identity&#45;&gt;reject</title>
+<path fill="none" stroke="#9a7d24" stroke-width="1.2" d="M491.99,-606C547.95,-606 666.35,-606 666.35,-606 666.35,-606 666.35,-301.54 666.35,-301.54"/>
+<polygon fill="#9a7d24" stroke="#9a7d24" stroke-width="1.2" points="668.73,-301.54 666.35,-294.74 663.97,-301.54 668.73,-301.54"/>
+<text xml:space="preserve" text-anchor="middle" x="622.42" y="-441.33" font-family="Arial" font-size="8.50" fill="#7c651d"> no </text>
+</g>
+<!-- symbols -->
+<g id="node16" class="node">
+<title>symbols</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="463.33,-420.78 316.31,-379.74 463.33,-338.7 610.35,-379.74 463.33,-420.78"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-382.89" font-family="Arial" font-size="10.50" fill="#17201a">Imports resolve and</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-370.29" font-family="Arial" font-size="10.50" fill="#17201a">modversion CRCs match?</text>
+</g>
+<!-- trust&#45;&gt;symbols -->
+<g id="edge16" class="edge">
+<title>trust&#45;&gt;symbols</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-466.37C463.33,-466.37 463.33,-429.8 463.33,-429.8"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-429.8 463.33,-423 460.95,-429.8 465.71,-429.8"/>
+<text xml:space="preserve" text-anchor="middle" x="472.31" y="-441.33" font-family="Arial" font-size="8.50" fill="#5d675f"> yes </text>
+</g>
+<!-- trust&#45;&gt;reject -->
+<g id="edge20" class="edge">
+<title>trust&#45;&gt;reject</title>
+<path fill="none" stroke="#9a7d24" stroke-width="1.2" d="M489.54,-477C538.36,-477 638.35,-477 638.35,-477 638.35,-477 638.35,-301.57 638.35,-301.57"/>
+<polygon fill="#9a7d24" stroke="#9a7d24" stroke-width="1.2" points="640.73,-301.57 638.35,-294.77 635.97,-301.57 640.73,-301.57"/>
+<text xml:space="preserve" text-anchor="middle" x="671.42" y="-377.19" font-family="Arial" font-size="8.50" fill="#7c651d"> no </text>
+</g>
+<!-- relocate -->
+<g id="node17" class="node">
+<title>relocate</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M521.35,-281.61C521.35,-281.61 405.32,-281.61 405.32,-281.61 399.32,-281.61 393.32,-275.61 393.32,-269.61 393.32,-269.61 393.32,-252.57 393.32,-252.57 393.32,-246.57 399.32,-240.57 405.32,-240.57 405.32,-240.57 521.35,-240.57 521.35,-240.57 527.35,-240.57 533.35,-246.57 533.35,-252.57 533.35,-252.57 533.35,-269.61 533.35,-269.61 533.35,-275.61 527.35,-281.61 521.35,-281.61"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-264.24" font-family="Arial" font-size="10.50" fill="#17201a">Allocate module memory</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-251.64" font-family="Arial" font-size="10.50" fill="#17201a">and apply relocations</text>
+</g>
+<!-- symbols&#45;&gt;relocate -->
+<g id="edge17" class="edge">
+<title>symbols&#45;&gt;relocate</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-338.24C463.33,-338.24 463.33,-290.69 463.33,-290.69"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-290.69 463.33,-283.89 460.95,-290.69 465.71,-290.69"/>
+<text xml:space="preserve" text-anchor="middle" x="472.31" y="-313.05" font-family="Arial" font-size="8.50" fill="#5d675f"> yes </text>
+</g>
+<!-- symbols&#45;&gt;reject -->
+<g id="edge21" class="edge">
+<title>symbols&#45;&gt;reject</title>
+<path fill="none" stroke="#9a7d24" stroke-width="1.2" d="M585.48,-372.32C585.48,-372.32 585.48,-290.73 585.48,-290.73"/>
+<polygon fill="#9a7d24" stroke="#9a7d24" stroke-width="1.2" points="587.86,-290.73 585.48,-283.93 583.1,-290.73 587.86,-290.73"/>
+<text xml:space="preserve" text-anchor="middle" x="582.42" y="-313.05" font-family="Arial" font-size="8.50" fill="#7c651d"> no </text>
+</g>
+<!-- module_init -->
+<g id="node18" class="node">
+<title>module_init</title>
+<path fill="#e4ecd0" stroke="#6f942e" stroke-width="1.15" d="M523.69,-192.68C523.69,-192.68 402.98,-192.68 402.98,-192.68 396.98,-192.68 390.98,-186.68 390.98,-180.68 390.98,-180.68 390.98,-163.64 390.98,-163.64 390.98,-157.64 396.98,-151.64 402.98,-151.64 402.98,-151.64 523.69,-151.64 523.69,-151.64 529.69,-151.64 535.69,-157.64 535.69,-163.64 535.69,-163.64 535.69,-180.68 535.69,-180.68 535.69,-186.68 529.69,-192.68 523.69,-192.68"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-175.31" font-family="Arial" font-size="10.50" fill="#17201a">Invoke module_init</text>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-162.71" font-family="Arial" font-size="10.50" fill="#17201a">module becomes resident</text>
+</g>
+<!-- relocate&#45;&gt;module_init -->
+<g id="edge18" class="edge">
+<title>relocate&#45;&gt;module_init</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M463.33,-240.02C463.33,-240.02 463.33,-201.7 463.33,-201.7"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="465.71,-201.7 463.33,-194.9 460.95,-201.7 465.71,-201.7"/>
+</g>
+<!-- probe -->
+<g id="node23" class="node">
+<title>probe</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M532.15,-64.52C532.15,-64.52 394.52,-64.52 394.52,-64.52 388.52,-64.52 382.52,-58.52 382.52,-52.52 382.52,-52.52 382.52,-40.52 382.52,-40.52 382.52,-34.52 388.52,-28.52 394.52,-28.52 394.52,-28.52 532.15,-28.52 532.15,-28.52 538.15,-28.52 544.15,-34.52 544.15,-40.52 544.15,-40.52 544.15,-52.52 544.15,-52.52 544.15,-58.52 538.15,-64.52 532.15,-64.52"/>
+<text xml:space="preserve" text-anchor="middle" x="463.33" y="-43.37" font-family="Arial" font-size="10.50" fill="#17201a">PCI bind and RM initialization</text>
+</g>
+<!-- module_init&#45;&gt;probe -->
+<g id="edge28" class="edge">
+<title>module_init&#45;&gt;probe</title>
+<path fill="none" stroke="#4f7f10" stroke-width="1.8" d="M463.33,-151.13C463.33,-151.13 463.33,-74.28 463.33,-74.28"/>
+<polygon fill="#4f7f10" stroke="#4f7f10" stroke-width="1.8" points="465.71,-74.28 463.33,-67.48 460.95,-74.28 465.71,-74.28"/>
+<text xml:space="preserve" text-anchor="middle" x="535.38" y="-117.99" font-family="Arial" font-size="8.50" fill="#4f7f10"> loader succeeded; driver may still fail </text>
+</g>
+<!-- identity_policy -->
+<g id="node20" class="node">
+<title>identity_policy</title>
+<polygon fill="#f0eee6" stroke="#aeb5aa" stroke-width="1.15" points="844.31,-656.82 694.35,-656.82 694.35,-652.82 690.35,-652.82 690.35,-648.82 694.35,-648.82 694.35,-623.78 690.35,-623.78 690.35,-619.78 694.35,-619.78 694.35,-615.78 844.31,-615.78 844.31,-656.82"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="694.35,-652.82 698.35,-652.82 698.35,-648.82 694.35,-648.82"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="694.35,-623.78 698.35,-623.78 698.35,-619.78 694.35,-619.78"/>
+<text xml:space="preserve" text-anchor="middle" x="769.33" y="-639.45" font-family="Arial" font-size="10.50" fill="#17201a">Running&#45;kernel identity</text>
+<text xml:space="preserve" text-anchor="middle" x="769.33" y="-626.85" font-family="Arial" font-size="10.50" fill="#17201a">release · arch · build flags</text>
+</g>
+<!-- identity_policy&#45;&gt;identity -->
+<g id="edge22" class="edge">
+<title>identity_policy&#45;&gt;identity</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M694.09,-636C694.09,-636 576.98,-636 576.98,-636"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="576.98,-633.62 570.18,-636 576.98,-638.38 576.98,-633.62"/>
+</g>
+<!-- trust_policy -->
+<g id="node21" class="node">
+<title>trust_policy</title>
+<polygon fill="#f0eee6" stroke="#aeb5aa" stroke-width="1.15" points="890.57,-528.54 702.1,-528.54 702.1,-524.54 698.1,-524.54 698.1,-520.54 702.1,-520.54 702.1,-495.5 698.1,-495.5 698.1,-491.5 702.1,-491.5 702.1,-487.5 890.57,-487.5 890.57,-528.54"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="702.1,-524.54 706.1,-524.54 706.1,-520.54 702.1,-520.54"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="702.1,-495.5 706.1,-495.5 706.1,-491.5 702.1,-491.5"/>
+<text xml:space="preserve" text-anchor="middle" x="796.33" y="-511.17" font-family="Arial" font-size="10.50" fill="#17201a">Module trust policy</text>
+<text xml:space="preserve" text-anchor="middle" x="796.33" y="-498.57" font-family="Arial" font-size="10.50" fill="#17201a">Secure Boot · keyrings · lockdown</text>
+</g>
+<!-- trust_policy&#45;&gt;trust -->
+<g id="edge23" class="edge">
+<title>trust_policy&#45;&gt;trust</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M701.8,-508C701.8,-508 575.48,-508 575.48,-508"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="575.48,-505.62 568.68,-508 575.48,-510.38 575.48,-505.62"/>
+</g>
+<!-- symbol_providers -->
+<g id="node22" class="node">
+<title>symbol_providers</title>
+<polygon fill="#f0eee6" stroke="#aeb5aa" stroke-width="1.15" points="918.38,-400.26 734.28,-400.26 734.28,-396.26 730.28,-396.26 730.28,-392.26 734.28,-392.26 734.28,-367.22 730.28,-367.22 730.28,-363.22 734.28,-363.22 734.28,-359.22 918.38,-359.22 918.38,-400.26"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="734.28,-396.26 738.28,-396.26 738.28,-392.26 734.28,-392.26"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="734.28,-367.22 738.28,-367.22 738.28,-363.22 734.28,-363.22"/>
+<text xml:space="preserve" text-anchor="middle" x="826.33" y="-382.89" font-family="Arial" font-size="10.50" fill="#17201a">Live symbol providers</text>
+<text xml:space="preserve" text-anchor="middle" x="826.33" y="-370.29" font-family="Arial" font-size="10.50" fill="#17201a">vmlinux + loaded NVIDIA modules</text>
+</g>
+<!-- symbol_providers&#45;&gt;symbols -->
+<g id="edge24" class="edge">
+<title>symbol_providers&#45;&gt;symbols</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M733.79,-380C733.79,-380 620.04,-380 620.04,-380"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="620.04,-377.62 613.24,-380 620.04,-382.38 620.04,-377.62"/>
+</g>
+<!-- gsp -->
+<g id="node24" class="node">
+<title>gsp</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M768.66,-64.52C768.66,-64.52 610,-64.52 610,-64.52 604,-64.52 598,-58.52 598,-52.52 598,-52.52 598,-40.52 598,-40.52 598,-34.52 604,-28.52 610,-28.52 610,-28.52 768.66,-28.52 768.66,-28.52 774.66,-28.52 780.66,-34.52 780.66,-40.52 780.66,-40.52 780.66,-52.52 780.66,-52.52 780.66,-58.52 774.66,-64.52 768.66,-64.52"/>
+<text xml:space="preserve" text-anchor="middle" x="689.33" y="-43.37" font-family="Arial" font-size="10.50" fill="#17201a">Load and negotiate GSP firmware</text>
+</g>
+<!-- probe&#45;&gt;gsp -->
+<g id="edge26" class="edge">
+<title>probe&#45;&gt;gsp</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M544.61,-47C544.61,-47 589.04,-47 589.04,-47"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="589.04,-49.38 595.84,-47 589.04,-44.62 589.04,-49.38"/>
+</g>
+<!-- ready -->
+<g id="node25" class="node">
+<title>ready</title>
+<polygon fill="#eef3e8" stroke="#6f942e" stroke-width="1.15" points="1016.67,-67.04 834,-67.04 834,-63.04 830,-63.04 830,-59.04 834,-59.04 834,-34 830,-34 830,-30 834,-30 834,-26 1016.67,-26 1016.67,-67.04"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="834,-63.04 838,-63.04 838,-59.04 834,-59.04"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="834,-34 838,-34 838,-30 834,-30"/>
+<text xml:space="preserve" text-anchor="middle" x="925.33" y="-49.67" font-family="Arial" font-size="10.50" fill="#17201a">Expose driver interfaces</text>
+<text xml:space="preserve" text-anchor="middle" x="925.33" y="-37.07" font-family="Arial" font-size="10.50" fill="#17201a">/dev/nvidia* · dependent modules</text>
+</g>
+<!-- gsp&#45;&gt;ready -->
+<g id="edge27" class="edge">
+<title>gsp&#45;&gt;ready</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M780.91,-47C780.91,-47 825.19,-47 825.19,-47"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="825.19,-49.38 831.99,-47 825.19,-44.62 825.19,-49.38"/>
+</g>
+</g>
 </svg>

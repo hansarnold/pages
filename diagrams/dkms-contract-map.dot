@@ -1,0 +1,208 @@
+digraph dkms_contract_map {
+  graph [
+    rankdir=TB,
+    newrank=true,
+    bgcolor="transparent",
+    pad="0.25",
+    nodesep="0.34",
+    ranksep="0.52",
+    splines=ortho,
+    fontname="Arial",
+    fontsize=12,
+    fontcolor="#17201a"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#f4f1e8",
+    color="#aeb5aa",
+    penwidth=1.15,
+    fontname="Arial",
+    fontsize=10.5,
+    fontcolor="#17201a",
+    margin="0.17,0.11"
+  ];
+  edge [
+    color="#5d675f",
+    penwidth=1.2,
+    arrowsize=0.68,
+    fontname="Arial",
+    fontsize=8.5,
+    fontcolor="#5d675f"
+  ];
+
+  subgraph cluster_build {
+    label="1  DKMS BUILD TRANSACTION";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#6f942e";
+    fillcolor="#edf1df";
+    penwidth=1.5;
+    margin=18;
+
+    source [
+      label="NVIDIA driver package\nsource + dkms.conf",
+      shape=folder,
+      group=main
+    ];
+    registered [
+      label="DKMS source registry\n(package, version)",
+      shape=cylinder,
+      fillcolor="#e4ecd0",
+      color="#6f942e",
+      group=main
+    ];
+    build_pipeline [
+      label="Target-specific module build\nconftest → Kbuild → MODPOST\nnvidia*.ko",
+      fillcolor="#eef3e8",
+      color="#6f942e",
+      group=main
+    ];
+    kernel_contract [
+      label="Target kernel build contract\nheaders · config · Module.symvers",
+      shape=component,
+      fillcolor="#ebe8dc"
+    ];
+    module_tree [
+      label="Real-root module tree\n/lib/modules/<K>/updates/dkms",
+      shape=folder,
+      fillcolor="#e4ecd0",
+      color="#6f942e",
+      group=main
+    ];
+    depmod [
+      label="kmod lookup indexes\nmodules.dep · aliases · symbols",
+      shape=note,
+      group=main
+    ];
+
+    source -> registered [label=" dkms add "];
+    registered -> build_pipeline [label=" dkms build -k K "];
+    build_pipeline -> module_tree [label=" dkms install "];
+    module_tree -> depmod [label=" depmod "];
+    kernel_contract -> build_pipeline [style=dashed];
+  }
+
+  subgraph cluster_boot_artifacts {
+    label="2  BOOT ARTIFACT MATERIALIZATION (DISTRIBUTION POLICY)";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#ebe8dc";
+    margin=18;
+
+    image_generator [
+      label="initramfs generator\ninitramfs-tools / dracut",
+      shape=box3d,
+      group=main
+    ];
+    initramfs [
+      label="Boot-time snapshot\ninitramfs for kernel K",
+      shape=note,
+      fillcolor="#f3eed9",
+      color="#ad9847",
+      group=main
+    ];
+
+    image_generator -> initramfs [label=" archive module tree + indexes "];
+  }
+
+  depmod -> image_generator [
+    label=" package hook / explicit rebuild ",
+    color="#4f7f10",
+    fontcolor="#4f7f10",
+    penwidth=1.8
+  ];
+
+  subgraph cluster_boot {
+    label="3  BOOT-TIME MODULE SELECTION";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#aeb5aa";
+    fillcolor="#f0eee6";
+    margin=18;
+
+    bootloader [label="Bootloader selects\nkernel K + initramfs K", shape=box3d, group=main];
+    unpack [label="Kernel unpacks initramfs\nand executes /init", group=main];
+    early_modprobe [label="Early module request\ninitramfs modprobe"];
+    switch_root [label="Mount real root\nand switch_root"];
+    late_modprobe [label="Late module request\nreal-root modprobe", group=main];
+    admission [
+      label="Kernel admits\nthis module set?",
+      shape=diamond,
+      style="filled",
+      fillcolor="#eef3e8",
+      color="#6f942e",
+      group=main
+    ];
+    rejected [
+      label="Load rejected\ninspect kernel log",
+      shape=octagon,
+      fillcolor="#f3eed9",
+      color="#ad9847"
+    ];
+    loader_contract [
+      label="Running-kernel admission policy\nvermagic · symbols · CRCs · trust",
+      shape=component,
+      fillcolor="#ebe8dc"
+    ];
+
+    bootloader -> unpack;
+    unpack -> early_modprobe [label=" early KMS path "];
+    unpack -> switch_root;
+    switch_root -> late_modprobe [label=" normal late path "];
+    early_modprobe -> admission;
+    late_modprobe -> admission;
+    admission -> rejected [label=" no ", color="#9a7d24", fontcolor="#7c651d"];
+    loader_contract -> admission [style=dashed, constraint=false];
+    { rank=same; early_modprobe; switch_root; }
+    { rank=same; loader_contract; admission; }
+  }
+
+  initramfs -> bootloader [label=" immutable input "];
+  module_tree -> late_modprobe [
+    label=" reads current real-root copy ",
+    style=dashed,
+    constraint=false
+  ];
+
+  subgraph cluster_runtime {
+    label="4  RESIDENT NVIDIA DRIVER RUNTIME";
+    labelloc=t;
+    labeljust=l;
+    style="rounded,filled";
+    color="#6f942e";
+    fillcolor="#edf1df";
+    penwidth=1.5;
+    margin=18;
+
+    modules [
+      label="Resident module graph\nnvidia · modeset · drm · uvm · peermem",
+      shape=component,
+      fillcolor="#e4ecd0",
+      color="#6f942e",
+      group=main
+    ];
+    initialization [label="Device initialization\nPCI probe · RM · GSP firmware"];
+    interfaces [label="Linux device interfaces\n/dev/nvidia* · /dev/dri/*"];
+    userspace [
+      label="Matched user-space stack\nlibcuda · NVML · display libraries",
+      shape=component,
+      fillcolor="#eef3e8",
+      color="#6f942e"
+    ];
+
+    modules -> initialization -> interfaces -> userspace;
+  }
+
+  admission -> modules [
+    label=" yes — relocate + module_init ",
+    color="#4f7f10",
+    fontcolor="#4f7f10",
+    penwidth=2,
+    minlen=2
+  ];
+}

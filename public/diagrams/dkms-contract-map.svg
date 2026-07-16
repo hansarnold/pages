@@ -1,165 +1,329 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="850" viewBox="0 0 1280 850" role="img" aria-labelledby="title desc">
-  <title id="title">The DKMS contract map for an NVIDIA Linux driver</title>
-  <desc id="desc">A systems diagram showing vendor source entering DKMS, DKMS delegating builds to Kbuild, installed modules branching into the real root and initramfs, and the Linux loader handing accepted modules to NVIDIA firmware and user space.</desc>
-  <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
-      <path d="M0 0L9 4.5L0 9Z" fill="#9bdc52"/>
-    </marker>
-    <marker id="muted-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
-      <path d="M0 0L9 4.5L0 9Z" fill="#778279"/>
-    </marker>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#050706" flood-opacity="0.46"/>
-    </filter>
-    <style>
-      .bg { fill: #0b0f0c; }
-      .grid { stroke: #182019; stroke-width: 1; }
-      .panel { fill: #111713; stroke: #2b352d; stroke-width: 1.5; }
-      .panel-strong { fill: #151d17; stroke: #9bdc52; stroke-width: 2; }
-      .panel-warn { fill: #1c1911; stroke: #bba75b; stroke-width: 1.5; }
-      text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-      .title { fill: #eef5ed; font-size: 30px; font-weight: 700; }
-      .subtitle { fill: #9aa49b; font-size: 15px; font-weight: 400; }
-      .eyebrow { fill: #9bdc52; font-size: 12px; font-weight: 700; letter-spacing: 1.6px; }
-      .heading { fill: #eef5ed; font-size: 18px; font-weight: 700; }
-      .body { fill: #c5cdc6; font-size: 13px; font-weight: 400; }
-      .muted { fill: #8e9990; font-size: 12px; font-weight: 400; }
-      .accent { fill: #9bdc52; font-size: 13px; font-weight: 700; }
-      .warn { fill: #d4c47b; font-size: 12px; font-weight: 700; }
-      .arrow { fill: none; stroke: #9bdc52; stroke-width: 2; marker-end: url(#arrow); }
-      .arrow-muted { fill: none; stroke: #778279; stroke-width: 1.5; stroke-dasharray: 6 5; marker-end: url(#muted-arrow); }
-      .divider { stroke: #2b352d; stroke-width: 1; stroke-dasharray: 5 5; }
-      .chip { fill: #18211a; stroke: #354239; stroke-width: 1; }
-    </style>
-  </defs>
-
-  <rect class="bg" width="1280" height="850" rx="18"/>
-  <g opacity="0.55">
-    <path class="grid" d="M0 50H1280M0 100H1280M0 150H1280M0 200H1280M0 250H1280M0 300H1280M0 350H1280M0 400H1280M0 450H1280M0 500H1280M0 550H1280M0 600H1280M0 650H1280M0 700H1280M0 750H1280M0 800H1280"/>
-    <path class="grid" d="M50 0V850M100 0V850M150 0V850M200 0V850M250 0V850M300 0V850M350 0V850M400 0V850M450 0V850M500 0V850M550 0V850M600 0V850M650 0V850M700 0V850M750 0V850M800 0V850M850 0V850M900 0V850M950 0V850M1000 0V850M1050 0V850M1100 0V850M1150 0V850M1200 0V850M1250 0V850"/>
-  </g>
-
-  <text class="eyebrow" x="56" y="55">SYSTEMS MAP / NVIDIA OOT MODULES</text>
-  <text class="title" x="56" y="94">Where DKMS owns state—and where it stops</text>
-  <text class="subtitle" x="56" y="124">The same driver release crosses five independently enforced contracts.</text>
-
-  <line class="divider" x1="286" y1="151" x2="286" y2="772"/>
-  <line class="divider" x1="548" y1="151" x2="548" y2="772"/>
-  <line class="divider" x1="836" y1="151" x2="836" y2="772"/>
-  <line class="divider" x1="1097" y1="151" x2="1097" y2="772"/>
-
-  <text class="eyebrow" x="56" y="174">PACKAGE</text>
-  <text class="eyebrow" x="315" y="174">DKMS STATE</text>
-  <text class="eyebrow" x="578" y="174">VENDOR + KBUILD</text>
-  <text class="eyebrow" x="865" y="174">BOOT ARTIFACTS</text>
-  <text class="eyebrow" x="1120" y="174">RUNTIME</text>
-
-  <g filter="url(#shadow)">
-    <rect class="panel" x="52" y="202" width="208" height="168" rx="10"/>
-    <text class="heading" x="72" y="235">nvidia/&lt;D&gt;</text>
-    <text class="body" x="72" y="265">/usr/src/nvidia-D</text>
-    <text class="body" x="72" y="289">source + patches</text>
-    <text class="body" x="72" y="313">dkms.conf + hooks</text>
-    <rect class="chip" x="72" y="329" width="166" height="23" rx="11"/>
-    <text class="muted" x="84" y="345">trusted package input</text>
-  </g>
-
-  <g filter="url(#shadow)">
-    <rect class="panel-strong" x="312" y="202" width="210" height="294" rx="10"/>
-    <text class="heading" x="334" y="235">tuple identity</text>
-    <text class="accent" x="334" y="262">(name, version,</text>
-    <text class="accent" x="334" y="282"> kernel, arch)</text>
-    <line x1="334" y1="302" x2="500" y2="302" stroke="#354239"/>
-    <circle cx="344" cy="330" r="5" fill="#9bdc52"/>
-    <text class="body" x="360" y="335">added</text>
-    <path d="M344 339V372" stroke="#56705b" stroke-width="2"/>
-    <circle cx="344" cy="382" r="5" fill="#9bdc52"/>
-    <text class="body" x="360" y="387">built</text>
-    <path d="M344 391V424" stroke="#56705b" stroke-width="2"/>
-    <circle cx="344" cy="434" r="5" fill="#9bdc52"/>
-    <text class="body" x="360" y="439">installed</text>
-    <text class="muted" x="334" y="469">bookkeeping + lifecycle</text>
-  </g>
-
-  <path class="arrow" d="M260 286H300"/>
-  <text class="muted" x="268" y="274">add</text>
-
-  <g filter="url(#shadow)">
-    <rect class="panel" x="574" y="202" width="236" height="294" rx="10"/>
-    <text class="heading" x="596" y="235">materialize .ko</text>
-    <text class="body" x="596" y="267">1  NVIDIA conftest</text>
-    <text class="body" x="596" y="296">2  compile via Kbuild</text>
-    <text class="body" x="596" y="325">3  MODPOST + symvers</text>
-    <text class="body" x="596" y="354">4  final module link</text>
-    <text class="body" x="596" y="383">5  strip / sign</text>
-    <line x1="596" y1="407" x2="788" y2="407" stroke="#354239"/>
-    <text class="muted" x="596" y="433">compiler and ABI facts</text>
-    <text class="muted" x="596" y="455">come from target kernel</text>
-    <text class="muted" x="596" y="477">build tree, not DKMS</text>
-  </g>
-
-  <path class="arrow" d="M522 350H562"/>
-  <text class="muted" x="528" y="337">MAKE</text>
-  <path class="arrow" d="M810 350H849"/>
-  <text class="muted" x="814" y="337">install</text>
-
-  <g filter="url(#shadow)">
-    <rect class="panel" x="858" y="202" width="214" height="138" rx="10"/>
-    <text class="heading" x="880" y="235">real root</text>
-    <text class="body" x="880" y="265">/lib/modules/K/...</text>
-    <text class="body" x="880" y="291">depmod indexes</text>
-    <text class="muted" x="880" y="317">future late modprobe</text>
-  </g>
-
-  <g filter="url(#shadow)">
-    <rect class="panel-warn" x="858" y="380" width="214" height="164" rx="10"/>
-    <text class="heading" x="880" y="413">initramfs snapshot</text>
-    <text class="body" x="880" y="443">cpio: /lib/modules/K</text>
-    <text class="body" x="880" y="469">its own depmod indexes</text>
-    <text class="warn" x="880" y="498">may still contain D−1</text>
-    <text class="muted" x="880" y="524">early KMS can win first</text>
-  </g>
-
-  <path class="arrow-muted" d="M965 340V368"/>
-  <text class="muted" x="977" y="360">image generator</text>
-
-  <g filter="url(#shadow)">
-    <rect class="panel-strong" x="1118" y="202" width="116" height="342" rx="10"/>
-    <text class="heading" x="1137" y="235">loader</text>
-    <text class="body" x="1137" y="272">vermagic</text>
-    <text class="body" x="1137" y="302">symbols</text>
-    <text class="body" x="1137" y="332">modversions</text>
-    <text class="body" x="1137" y="362">signature</text>
-    <text class="body" x="1137" y="392">relocations</text>
-    <text class="body" x="1137" y="422">policy</text>
-    <line x1="1137" y1="450" x2="1215" y2="450" stroke="#56705b"/>
-    <text class="accent" x="1137" y="477">accept</text>
-    <text class="muted" x="1137" y="500">or reject</text>
-    <text class="muted" x="1137" y="522">the bytes</text>
-  </g>
-
-  <path class="arrow" d="M1072 270H1106"/>
-  <path class="arrow" d="M1072 462H1106"/>
-
-  <g filter="url(#shadow)">
-    <rect class="panel" x="312" y="584" width="922" height="156" rx="10"/>
-    <text class="eyebrow" x="334" y="615">AFTER LOADER ACCEPTANCE</text>
-    <text class="heading" x="334" y="650">resident NVIDIA module graph</text>
-    <rect class="chip" x="334" y="674" width="112" height="31" rx="7"/>
-    <text class="body" x="350" y="695">nvidia</text>
-    <rect class="chip" x="463" y="674" width="146" height="31" rx="7"/>
-    <text class="body" x="479" y="695">nvidia_modeset</text>
-    <rect class="chip" x="626" y="674" width="123" height="31" rx="7"/>
-    <text class="body" x="642" y="695">nvidia_drm</text>
-    <rect class="chip" x="766" y="674" width="123" height="31" rx="7"/>
-    <text class="body" x="782" y="695">nvidia_uvm</text>
-    <path class="arrow" d="M902 689H948"/>
-    <text class="body" x="963" y="685">GSP / firmware</text>
-    <text class="body" x="963" y="708">user-space stack</text>
-  </g>
-
-  <path class="arrow" d="M1176 544V572"/>
-
-  <text class="muted" x="56" y="794">DKMS can report “installed” before initramfs, loader trust, firmware, or user-space compatibility is proven.</text>
-  <text class="accent" x="56" y="818">Debug the first broken transition—not the final symptom.</text>
+<!-- Generated by graphviz version 15.0.0 (20260523.1842)
+ -->
+<!-- Title: dkms_contract_map Pages: 1 -->
+<svg width="537pt" height="1724pt"
+ viewBox="0.00 0.00 537.00 1724.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-labelledby="dkms-contract-map-title dkms-contract-map-description">
+<title id="dkms-contract-map-title">DKMS build, initramfs, and boot-time module selection flow</title>
+<desc id="dkms-contract-map-description">A flowchart from the NVIDIA driver package through DKMS and Kbuild, into the real-root module tree and initramfs snapshot, then through early or late modprobe to kernel admission and the resident NVIDIA driver runtime.</desc>
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(18 1706.09)">
+<title>dkms_contract_map</title>
+<g id="clust1" class="cluster">
+<title>cluster_build</title>
+<path fill="#edf1df" stroke="#6f942e" stroke-width="1.5" d="M20,-1195.7C20,-1195.7 375,-1195.7 375,-1195.7 381,-1195.7 387,-1201.7 387,-1207.7 387,-1207.7 387,-1668.09 387,-1668.09 387,-1674.09 381,-1680.09 375,-1680.09 375,-1680.09 20,-1680.09 20,-1680.09 14,-1680.09 8,-1674.09 8,-1668.09 8,-1668.09 8,-1207.7 8,-1207.7 8,-1201.7 14,-1195.7 20,-1195.7"/>
+<text xml:space="preserve" text-anchor="middle" x="104.01" y="-1665.29" font-family="Arial" font-size="12.00" fill="#17201a">1 &#160;DKMS BUILD TRANSACTION</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_boot_artifacts</title>
+<path fill="#ebe8dc" stroke="#aeb5aa" d="M33,-980.82C33,-980.82 388,-980.82 388,-980.82 394,-980.82 400,-986.82 400,-992.82 400,-992.82 400,-1157.5 400,-1157.5 400,-1163.5 394,-1169.5 388,-1169.5 388,-1169.5 33,-1169.5 33,-1169.5 27,-1169.5 21,-1163.5 21,-1157.5 21,-1157.5 21,-992.82 21,-992.82 21,-986.82 27,-980.82 33,-980.82"/>
+<text xml:space="preserve" text-anchor="middle" x="210.68" y="-1154.7" font-family="Arial" font-size="12.00" fill="#17201a">2 &#160;BOOT ARTIFACT MATERIALIZATION (DISTRIBUTION POLICY)</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_boot</title>
+<path fill="#f0eee6" stroke="#aeb5aa" d="M30,-364.56C30,-364.56 481,-364.56 481,-364.56 487,-364.56 493,-370.56 493,-376.56 493,-376.56 493,-942.62 493,-942.62 493,-948.62 487,-954.62 481,-954.62 481,-954.62 30,-954.62 30,-954.62 24,-954.62 18,-948.62 18,-942.62 18,-942.62 18,-376.56 18,-376.56 18,-370.56 24,-364.56 30,-364.56"/>
+<text xml:space="preserve" text-anchor="middle" x="129.01" y="-939.82" font-family="Arial" font-size="12.00" fill="#17201a">3 &#160;BOOT&#45;TIME MODULE SELECTION</text>
+</g>
+<g id="clust6" class="cluster">
+<title>cluster_runtime</title>
+<path fill="#edf1df" stroke="#6f942e" stroke-width="1.5" d="M129,-8C129,-8 363,-8 363,-8 369,-8 375,-14 375,-20 375,-20 375,-335.56 375,-335.56 375,-341.56 369,-347.56 363,-347.56 363,-347.56 129,-347.56 129,-347.56 123,-347.56 117,-341.56 117,-335.56 117,-335.56 117,-20 117,-20 117,-14 123,-8 129,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="237.01" y="-332.76" font-family="Arial" font-size="12.00" fill="#17201a">4 &#160;RESIDENT NVIDIA DRIVER RUNTIME</text>
+</g>
+<!-- source -->
+<g id="node1" class="node">
+<title>source</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="157.64,-1639.69 154.64,-1643.69 133.64,-1643.69 130.64,-1639.69 26.36,-1639.69 26.36,-1598.65 157.64,-1598.65 157.64,-1639.69"/>
+<text xml:space="preserve" text-anchor="middle" x="92" y="-1622.32" font-family="Arial" font-size="10.50" fill="#17201a">NVIDIA driver package</text>
+<text xml:space="preserve" text-anchor="middle" x="92" y="-1609.72" font-family="Arial" font-size="10.50" fill="#17201a">source + dkms.conf</text>
+</g>
+<!-- registered -->
+<g id="node2" class="node">
+<title>registered</title>
+<path fill="#e4ecd0" stroke="#6f942e" stroke-width="1.15" d="M155.29,-1545.32C155.29,-1548.15 126.92,-1550.45 92,-1550.45 57.08,-1550.45 28.71,-1548.15 28.71,-1545.32 28.71,-1545.32 28.71,-1499.15 28.71,-1499.15 28.71,-1496.32 57.08,-1494.02 92,-1494.02 126.92,-1494.02 155.29,-1496.32 155.29,-1499.15 155.29,-1499.15 155.29,-1545.32 155.29,-1545.32"/>
+<path fill="none" stroke="#6f942e" stroke-width="1.15" d="M155.29,-1545.32C155.29,-1542.49 126.92,-1540.19 92,-1540.19 57.08,-1540.19 28.71,-1542.49 28.71,-1545.32"/>
+<text xml:space="preserve" text-anchor="middle" x="92" y="-1525.39" font-family="Arial" font-size="10.50" fill="#17201a">DKMS source registry</text>
+<text xml:space="preserve" text-anchor="middle" x="92" y="-1512.79" font-family="Arial" font-size="10.50" fill="#17201a">(package, version)</text>
+</g>
+<!-- source&#45;&gt;registered -->
+<g id="edge1" class="edge">
+<title>source&#45;&gt;registered</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M92,-1598.14C92,-1598.14 92,-1559.57 92,-1559.57"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="94.38,-1559.57 92,-1552.77 89.62,-1559.57 94.38,-1559.57"/>
+<text xml:space="preserve" text-anchor="middle" x="112.79" y="-1572" font-family="Arial" font-size="8.50" fill="#5d675f"> dkms add </text>
+</g>
+<!-- build_pipeline -->
+<g id="node3" class="node">
+<title>build_pipeline</title>
+<path fill="#eef3e8" stroke="#6f942e" stroke-width="1.15" d="M190.35,-1445.82C190.35,-1445.82 41.65,-1445.82 41.65,-1445.82 35.65,-1445.82 29.65,-1439.82 29.65,-1433.82 29.65,-1433.82 29.65,-1404.18 29.65,-1404.18 29.65,-1398.18 35.65,-1392.18 41.65,-1392.18 41.65,-1392.18 190.35,-1392.18 190.35,-1392.18 196.35,-1392.18 202.35,-1398.18 202.35,-1404.18 202.35,-1404.18 202.35,-1433.82 202.35,-1433.82 202.35,-1439.82 196.35,-1445.82 190.35,-1445.82"/>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1428.45" font-family="Arial" font-size="10.50" fill="#17201a">Target&#45;specific module build</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1415.85" font-family="Arial" font-size="10.50" fill="#17201a">conftest → Kbuild → MODPOST</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1403.25" font-family="Arial" font-size="10.50" fill="#17201a">nvidia*.ko</text>
+</g>
+<!-- registered&#45;&gt;build_pipeline -->
+<g id="edge2" class="edge">
+<title>registered&#45;&gt;build_pipeline</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M92.47,-1493.48C92.47,-1493.48 92.47,-1454.8 92.47,-1454.8"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="94.85,-1454.8 92.47,-1448 90.09,-1454.8 94.85,-1454.8"/>
+<text xml:space="preserve" text-anchor="middle" x="135.41" y="-1467.37" font-family="Arial" font-size="8.50" fill="#5d675f"> dkms build &#45;k K </text>
+</g>
+<!-- module_tree -->
+<g id="node5" class="node">
+<title>module_tree</title>
+<polygon fill="#e4ecd0" stroke="#6f942e" stroke-width="1.15" points="201.49,-1343.98 198.49,-1347.98 177.49,-1347.98 174.49,-1343.98 30.51,-1343.98 30.51,-1302.94 201.49,-1302.94 201.49,-1343.98"/>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1326.61" font-family="Arial" font-size="10.50" fill="#17201a">Real&#45;root module tree</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1314.01" font-family="Arial" font-size="10.50" fill="#17201a">/lib/modules/&lt;K&gt;/updates/dkms</text>
+</g>
+<!-- build_pipeline&#45;&gt;module_tree -->
+<g id="edge3" class="edge">
+<title>build_pipeline&#45;&gt;module_tree</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M116,-1391.62C116,-1391.62 116,-1353.08 116,-1353.08"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="118.38,-1353.08 116,-1346.28 113.62,-1353.08 118.38,-1353.08"/>
+<text xml:space="preserve" text-anchor="middle" x="140.56" y="-1365.53" font-family="Arial" font-size="8.50" fill="#5d675f"> dkms install </text>
+</g>
+<!-- kernel_contract -->
+<g id="node4" class="node">
+<title>kernel_contract</title>
+<polygon fill="#ebe8dc" stroke="#aeb5aa" stroke-width="1.15" points="369.11,-1542.76 178.89,-1542.76 178.89,-1538.76 174.89,-1538.76 174.89,-1534.76 178.89,-1534.76 178.89,-1509.72 174.89,-1509.72 174.89,-1505.72 178.89,-1505.72 178.89,-1501.72 369.11,-1501.72 369.11,-1542.76"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="178.89,-1538.76 182.89,-1538.76 182.89,-1534.76 178.89,-1534.76"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="178.89,-1509.72 182.89,-1509.72 182.89,-1505.72 178.89,-1505.72"/>
+<text xml:space="preserve" text-anchor="middle" x="274" y="-1525.39" font-family="Arial" font-size="10.50" fill="#17201a">Target kernel build contract</text>
+<text xml:space="preserve" text-anchor="middle" x="274" y="-1512.79" font-family="Arial" font-size="10.50" fill="#17201a">headers · config · Module.symvers</text>
+</g>
+<!-- kernel_contract&#45;&gt;build_pipeline -->
+<g id="edge5" class="edge">
+<title>kernel_contract&#45;&gt;build_pipeline</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M190.62,-1501.35C190.62,-1501.35 190.62,-1454.75 190.62,-1454.75"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="193,-1454.75 190.62,-1447.95 188.24,-1454.75 193,-1454.75"/>
+</g>
+<!-- depmod -->
+<g id="node6" class="node">
+<title>depmod</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="199.57,-1254.74 26.43,-1254.74 26.43,-1213.7 205.57,-1213.7 205.57,-1248.74 199.57,-1254.74"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="199.57,-1254.74 199.57,-1248.74"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="205.57,-1248.74 199.57,-1248.74"/>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1237.37" font-family="Arial" font-size="10.50" fill="#17201a">kmod lookup indexes</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1224.77" font-family="Arial" font-size="10.50" fill="#17201a">modules.dep · aliases · symbols</text>
+</g>
+<!-- module_tree&#45;&gt;depmod -->
+<g id="edge4" class="edge">
+<title>module_tree&#45;&gt;depmod</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M116,-1302.76C116,-1302.76 116,-1263.73 116,-1263.73"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="118.38,-1263.73 116,-1256.93 113.62,-1263.73 118.38,-1263.73"/>
+<text xml:space="preserve" text-anchor="middle" x="133.72" y="-1276.29" font-family="Arial" font-size="8.50" fill="#5d675f"> depmod </text>
+</g>
+<!-- late_modprobe -->
+<g id="node13" class="node">
+<title>late_modprobe</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M185.11,-655.7C185.11,-655.7 88.89,-655.7 88.89,-655.7 82.89,-655.7 76.89,-649.7 76.89,-643.7 76.89,-643.7 76.89,-626.66 76.89,-626.66 76.89,-620.66 82.89,-614.66 88.89,-614.66 88.89,-614.66 185.11,-614.66 185.11,-614.66 191.11,-614.66 197.11,-620.66 197.11,-626.66 197.11,-626.66 197.11,-643.7 197.11,-643.7 197.11,-649.7 191.11,-655.7 185.11,-655.7"/>
+<text xml:space="preserve" text-anchor="middle" x="137" y="-638.33" font-family="Arial" font-size="10.50" fill="#17201a">Late module request</text>
+<text xml:space="preserve" text-anchor="middle" x="137" y="-625.73" font-family="Arial" font-size="10.50" fill="#17201a">real&#45;root modprobe</text>
+</g>
+<!-- module_tree&#45;&gt;late_modprobe -->
+<g id="edge17" class="edge">
+<title>module_tree&#45;&gt;late_modprobe</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M30.14,-1323C17.36,-1323 8.36,-1323 8.36,-1323 8.36,-1323 8.36,-635 8.36,-635 8.36,-635 67.83,-635 67.83,-635"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="67.83,-637.38 74.63,-635 67.83,-632.62 67.83,-637.38"/>
+<text xml:space="preserve" text-anchor="middle" x="266.57" y="-965.17" font-family="Arial" font-size="8.50" fill="#5d675f"> reads current real&#45;root copy </text>
+</g>
+<!-- image_generator -->
+<g id="node7" class="node">
+<title>image_generator</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="179.88,-1129.1 56.12,-1129.1 52.12,-1125.1 52.12,-1088.06 175.88,-1088.06 179.88,-1092.06 179.88,-1129.1"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="175.88,-1125.1 52.12,-1125.1"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="175.88,-1125.1 175.88,-1088.06"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="175.88,-1125.1 179.88,-1129.1"/>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1111.73" font-family="Arial" font-size="10.50" fill="#17201a">initramfs generator</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1099.13" font-family="Arial" font-size="10.50" fill="#17201a">initramfs&#45;tools / dracut</text>
+</g>
+<!-- depmod&#45;&gt;image_generator -->
+<g id="edge7" class="edge">
+<title>depmod&#45;&gt;image_generator</title>
+<path fill="none" stroke="#4f7f10" stroke-width="1.8" d="M116,-1213.19C116,-1213.19 116,-1138.79 116,-1138.79"/>
+<polygon fill="#4f7f10" stroke="#4f7f10" stroke-width="1.8" points="118.38,-1138.79 116,-1131.99 113.62,-1138.79 118.38,-1138.79"/>
+<text xml:space="preserve" text-anchor="middle" x="175.3" y="-1180.05" font-family="Arial" font-size="8.50" fill="#4f7f10"> package hook / explicit rebuild </text>
+</g>
+<!-- initramfs -->
+<g id="node8" class="node">
+<title>initramfs</title>
+<polygon fill="#f3eed9" stroke="#ad9847" stroke-width="1.15" points="170.38,-1039.86 55.62,-1039.86 55.62,-998.82 176.38,-998.82 176.38,-1033.86 170.38,-1039.86"/>
+<polyline fill="none" stroke="#ad9847" stroke-width="1.15" points="170.38,-1039.86 170.38,-1033.86"/>
+<polyline fill="none" stroke="#ad9847" stroke-width="1.15" points="176.38,-1033.86 170.38,-1033.86"/>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1022.49" font-family="Arial" font-size="10.50" fill="#17201a">Boot&#45;time snapshot</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-1009.89" font-family="Arial" font-size="10.50" fill="#17201a">initramfs for kernel K</text>
+</g>
+<!-- image_generator&#45;&gt;initramfs -->
+<g id="edge6" class="edge">
+<title>image_generator&#45;&gt;initramfs</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M116,-1087.88C116,-1087.88 116,-1048.85 116,-1048.85"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="118.38,-1048.85 116,-1042.05 113.62,-1048.85 118.38,-1048.85"/>
+<text xml:space="preserve" text-anchor="middle" x="175.18" y="-1061.41" font-family="Arial" font-size="8.50" fill="#5d675f"> archive module tree + indexes </text>
+</g>
+<!-- bootloader -->
+<g id="node9" class="node">
+<title>bootloader</title>
+<polygon fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" points="178.28,-914.22 57.72,-914.22 53.72,-910.22 53.72,-873.18 174.28,-873.18 178.28,-877.18 178.28,-914.22"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="174.28,-910.22 53.72,-910.22"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="174.28,-910.22 174.28,-873.18"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="174.28,-910.22 178.28,-914.22"/>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-896.85" font-family="Arial" font-size="10.50" fill="#17201a">Bootloader selects</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-884.25" font-family="Arial" font-size="10.50" fill="#17201a">kernel K + initramfs K</text>
+</g>
+<!-- initramfs&#45;&gt;bootloader -->
+<g id="edge16" class="edge">
+<title>initramfs&#45;&gt;bootloader</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M116,-998.31C116,-998.31 116,-923 116,-923"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="118.38,-923 116,-916.2 113.62,-923 118.38,-923"/>
+<text xml:space="preserve" text-anchor="middle" x="148.36" y="-965.17" font-family="Arial" font-size="8.50" fill="#5d675f"> immutable input </text>
+</g>
+<!-- unpack -->
+<g id="node10" class="node">
+<title>unpack</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M173.72,-834.18C173.72,-834.18 58.28,-834.18 58.28,-834.18 52.28,-834.18 46.28,-828.18 46.28,-822.18 46.28,-822.18 46.28,-805.14 46.28,-805.14 46.28,-799.14 52.28,-793.14 58.28,-793.14 58.28,-793.14 173.72,-793.14 173.72,-793.14 179.72,-793.14 185.72,-799.14 185.72,-805.14 185.72,-805.14 185.72,-822.18 185.72,-822.18 185.72,-828.18 179.72,-834.18 173.72,-834.18"/>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-816.81" font-family="Arial" font-size="10.50" fill="#17201a">Kernel unpacks initramfs</text>
+<text xml:space="preserve" text-anchor="middle" x="116" y="-804.21" font-family="Arial" font-size="10.50" fill="#17201a">and executes /init</text>
+</g>
+<!-- bootloader&#45;&gt;unpack -->
+<g id="edge8" class="edge">
+<title>bootloader&#45;&gt;unpack</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M116,-872.67C116,-872.67 116,-843.17 116,-843.17"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="118.38,-843.17 116,-836.37 113.62,-843.17 118.38,-843.17"/>
+</g>
+<!-- early_modprobe -->
+<g id="node11" class="node">
+<title>early_modprobe</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M147.85,-744.94C147.85,-744.94 48.15,-744.94 48.15,-744.94 42.15,-744.94 36.15,-738.94 36.15,-732.94 36.15,-732.94 36.15,-715.9 36.15,-715.9 36.15,-709.9 42.15,-703.9 48.15,-703.9 48.15,-703.9 147.85,-703.9 147.85,-703.9 153.85,-703.9 159.85,-709.9 159.85,-715.9 159.85,-715.9 159.85,-732.94 159.85,-732.94 159.85,-738.94 153.85,-744.94 147.85,-744.94"/>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-727.57" font-family="Arial" font-size="10.50" fill="#17201a">Early module request</text>
+<text xml:space="preserve" text-anchor="middle" x="98" y="-714.97" font-family="Arial" font-size="10.50" fill="#17201a">initramfs modprobe</text>
+</g>
+<!-- unpack&#45;&gt;early_modprobe -->
+<g id="edge9" class="edge">
+<title>unpack&#45;&gt;early_modprobe</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M103.06,-792.96C103.06,-792.96 103.06,-753.93 103.06,-753.93"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="105.44,-753.93 103.06,-747.13 100.68,-753.93 105.44,-753.93"/>
+<text xml:space="preserve" text-anchor="middle" x="134.42" y="-766.49" font-family="Arial" font-size="8.50" fill="#5d675f"> early KMS path </text>
+</g>
+<!-- switch_root -->
+<g id="node12" class="node">
+<title>switch_root</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M270.01,-744.94C270.01,-744.94 195.99,-744.94 195.99,-744.94 189.99,-744.94 183.99,-738.94 183.99,-732.94 183.99,-732.94 183.99,-715.9 183.99,-715.9 183.99,-709.9 189.99,-703.9 195.99,-703.9 195.99,-703.9 270.01,-703.9 270.01,-703.9 276.01,-703.9 282.01,-709.9 282.01,-715.9 282.01,-715.9 282.01,-732.94 282.01,-732.94 282.01,-738.94 276.01,-744.94 270.01,-744.94"/>
+<text xml:space="preserve" text-anchor="middle" x="233" y="-727.57" font-family="Arial" font-size="10.50" fill="#17201a">Mount real root</text>
+<text xml:space="preserve" text-anchor="middle" x="233" y="-714.97" font-family="Arial" font-size="10.50" fill="#17201a">and switch_root</text>
+</g>
+<!-- unpack&#45;&gt;switch_root -->
+<g id="edge10" class="edge">
+<title>unpack&#45;&gt;switch_root</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M186.2,-814C191.97,-814 195.65,-814 195.65,-814 195.65,-814 195.65,-753.81 195.65,-753.81"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="198.03,-753.81 195.65,-747.01 193.27,-753.81 198.03,-753.81"/>
+</g>
+<!-- admission -->
+<g id="node14" class="node">
+<title>admission</title>
+<polygon fill="#eef3e8" stroke="#6f942e" stroke-width="1.15" points="137,-575.66 36.06,-534.62 137,-493.58 237.94,-534.62 137,-575.66"/>
+<text xml:space="preserve" text-anchor="middle" x="137" y="-537.77" font-family="Arial" font-size="10.50" fill="#17201a">Kernel admits</text>
+<text xml:space="preserve" text-anchor="middle" x="137" y="-525.17" font-family="Arial" font-size="10.50" fill="#17201a">this module set?</text>
+</g>
+<!-- early_modprobe&#45;&gt;admission -->
+<g id="edge12" class="edge">
+<title>early_modprobe&#45;&gt;admission</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M56.52,-703.38C56.52,-703.38 56.52,-552.04 56.52,-552.04"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="58.9,-552.04 56.52,-545.24 54.14,-552.04 58.9,-552.04"/>
+</g>
+<!-- switch_root&#45;&gt;late_modprobe -->
+<g id="edge11" class="edge">
+<title>switch_root&#45;&gt;late_modprobe</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M190.55,-703.72C190.55,-703.72 190.55,-664.69 190.55,-664.69"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="192.93,-664.69 190.55,-657.89 188.17,-664.69 192.93,-664.69"/>
+<text xml:space="preserve" text-anchor="middle" x="193.84" y="-677.25" font-family="Arial" font-size="8.50" fill="#5d675f"> normal late path </text>
+</g>
+<!-- late_modprobe&#45;&gt;admission -->
+<g id="edge13" class="edge">
+<title>late_modprobe&#45;&gt;admission</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M137,-614.35C137,-614.35 137,-584.79 137,-584.79"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="139.38,-584.79 137,-577.99 134.62,-584.79 139.38,-584.79"/>
+</g>
+<!-- rejected -->
+<g id="node15" class="node">
+<title>rejected</title>
+<path fill="#f3eed9" stroke="#ad9847" stroke-width="1.15" d="M198.28,-409.63C198.28,-409.63 198.28,-418.31 198.28,-418.31 198.28,-422.64 194.23,-428.54 190.19,-430.11 190.19,-430.11 158.76,-442.25 158.76,-442.25 154.71,-443.82 146.33,-445.38 141.99,-445.38 141.99,-445.38 92.01,-445.38 92.01,-445.38 87.67,-445.38 79.29,-443.82 75.24,-442.25 75.24,-442.25 43.81,-430.11 43.81,-430.11 39.77,-428.54 35.72,-422.64 35.72,-418.31 35.72,-418.31 35.72,-409.63 35.72,-409.63 35.72,-405.3 39.77,-399.4 43.81,-397.83 43.81,-397.83 75.24,-385.69 75.24,-385.69 79.29,-384.12 87.67,-382.56 92.01,-382.56 92.01,-382.56 141.99,-382.56 141.99,-382.56 146.33,-382.56 154.71,-384.12 158.76,-385.69 158.76,-385.69 190.19,-397.83 190.19,-397.83 194.23,-399.4 198.28,-405.3 198.28,-409.63"/>
+<text xml:space="preserve" text-anchor="middle" x="117" y="-417.12" font-family="Arial" font-size="10.50" fill="#17201a">Load rejected</text>
+<text xml:space="preserve" text-anchor="middle" x="117" y="-404.52" font-family="Arial" font-size="10.50" fill="#17201a">inspect kernel log</text>
+</g>
+<!-- admission&#45;&gt;rejected -->
+<g id="edge14" class="edge">
+<title>admission&#45;&gt;rejected</title>
+<path fill="none" stroke="#9a7d24" stroke-width="1.2" d="M117.17,-501.33C117.17,-501.33 117.17,-454.52 117.17,-454.52"/>
+<polygon fill="#9a7d24" stroke="#9a7d24" stroke-width="1.2" points="119.55,-454.52 117.17,-447.72 114.79,-454.52 119.55,-454.52"/>
+<text xml:space="preserve" text-anchor="middle" x="134.09" y="-466.93" font-family="Arial" font-size="8.50" fill="#7c651d"> no </text>
+</g>
+<!-- modules -->
+<g id="node17" class="node">
+<title>modules</title>
+<polygon fill="#e4ecd0" stroke="#6f942e" stroke-width="1.15" points="356.56,-307.16 135.44,-307.16 135.44,-303.16 131.44,-303.16 131.44,-299.16 135.44,-299.16 135.44,-274.12 131.44,-274.12 131.44,-270.12 135.44,-270.12 135.44,-266.12 356.56,-266.12 356.56,-307.16"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="135.44,-303.16 139.44,-303.16 139.44,-299.16 135.44,-299.16"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="135.44,-274.12 139.44,-274.12 139.44,-270.12 135.44,-270.12"/>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-289.79" font-family="Arial" font-size="10.50" fill="#17201a">Resident module graph</text>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-277.19" font-family="Arial" font-size="10.50" fill="#17201a">nvidia · modeset · drm · uvm · peermem</text>
+</g>
+<!-- admission&#45;&gt;modules -->
+<g id="edge21" class="edge">
+<title>admission&#45;&gt;modules</title>
+<path fill="none" stroke="#4f7f10" stroke-width="2" d="M218.11,-526.09C218.11,-526.09 218.11,-317.41 218.11,-317.41"/>
+<polygon fill="#4f7f10" stroke="#4f7f10" stroke-width="2" points="220.49,-317.41 218.11,-310.61 215.73,-317.41 220.49,-317.41"/>
+<text xml:space="preserve" text-anchor="middle" x="302.58" y="-411.42" font-family="Arial" font-size="8.50" fill="#4f7f10"> yes — relocate + module_init </text>
+</g>
+<!-- loader_contract -->
+<g id="node16" class="node">
+<title>loader_contract</title>
+<polygon fill="#ebe8dc" stroke="#aeb5aa" stroke-width="1.15" points="474.5,-555.14 285.5,-555.14 285.5,-551.14 281.5,-551.14 281.5,-547.14 285.5,-547.14 285.5,-522.1 281.5,-522.1 281.5,-518.1 285.5,-518.1 285.5,-514.1 474.5,-514.1 474.5,-555.14"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="285.5,-551.14 289.5,-551.14 289.5,-547.14 285.5,-547.14"/>
+<polyline fill="none" stroke="#aeb5aa" stroke-width="1.15" points="285.5,-522.1 289.5,-522.1 289.5,-518.1 285.5,-518.1"/>
+<text xml:space="preserve" text-anchor="middle" x="380" y="-537.77" font-family="Arial" font-size="10.50" fill="#17201a">Running&#45;kernel admission policy</text>
+<text xml:space="preserve" text-anchor="middle" x="380" y="-525.17" font-family="Arial" font-size="10.50" fill="#17201a">vermagic · symbols · CRCs · trust</text>
+</g>
+<!-- loader_contract&#45;&gt;admission -->
+<g id="edge15" class="edge">
+<title>loader_contract&#45;&gt;admission</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" stroke-dasharray="5,2" d="M285.01,-535C285.01,-535 246.96,-535 246.96,-535"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="246.96,-532.62 240.16,-535 246.96,-537.38 246.96,-532.62"/>
+</g>
+<!-- initialization -->
+<g id="node18" class="node">
+<title>initialization</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M322.38,-227.12C322.38,-227.12 169.62,-227.12 169.62,-227.12 163.62,-227.12 157.62,-221.12 157.62,-215.12 157.62,-215.12 157.62,-198.08 157.62,-198.08 157.62,-192.08 163.62,-186.08 169.62,-186.08 169.62,-186.08 322.38,-186.08 322.38,-186.08 328.38,-186.08 334.38,-192.08 334.38,-198.08 334.38,-198.08 334.38,-215.12 334.38,-215.12 334.38,-221.12 328.38,-227.12 322.38,-227.12"/>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-209.75" font-family="Arial" font-size="10.50" fill="#17201a">Device initialization</text>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-197.15" font-family="Arial" font-size="10.50" fill="#17201a">PCI probe · RM · GSP firmware</text>
+</g>
+<!-- modules&#45;&gt;initialization -->
+<g id="edge18" class="edge">
+<title>modules&#45;&gt;initialization</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M246,-265.61C246,-265.61 246,-236.11 246,-236.11"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="248.38,-236.11 246,-229.31 243.62,-236.11 248.38,-236.11"/>
+</g>
+<!-- interfaces -->
+<g id="node19" class="node">
+<title>interfaces</title>
+<path fill="#f4f1e8" stroke="#aeb5aa" stroke-width="1.15" d="M299.93,-147.08C299.93,-147.08 192.07,-147.08 192.07,-147.08 186.07,-147.08 180.07,-141.08 180.07,-135.08 180.07,-135.08 180.07,-118.04 180.07,-118.04 180.07,-112.04 186.07,-106.04 192.07,-106.04 192.07,-106.04 299.93,-106.04 299.93,-106.04 305.93,-106.04 311.93,-112.04 311.93,-118.04 311.93,-118.04 311.93,-135.08 311.93,-135.08 311.93,-141.08 305.93,-147.08 299.93,-147.08"/>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-129.71" font-family="Arial" font-size="10.50" fill="#17201a">Linux device interfaces</text>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-117.11" font-family="Arial" font-size="10.50" fill="#17201a">/dev/nvidia* · /dev/dri/*</text>
+</g>
+<!-- initialization&#45;&gt;interfaces -->
+<g id="edge19" class="edge">
+<title>initialization&#45;&gt;interfaces</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M246,-185.57C246,-185.57 246,-156.07 246,-156.07"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="248.38,-156.07 246,-149.27 243.62,-156.07 248.38,-156.07"/>
+</g>
+<!-- userspace -->
+<g id="node20" class="node">
+<title>userspace</title>
+<polygon fill="#eef3e8" stroke="#6f942e" stroke-width="1.15" points="337.31,-67.04 154.69,-67.04 154.69,-63.04 150.69,-63.04 150.69,-59.04 154.69,-59.04 154.69,-34 150.69,-34 150.69,-30 154.69,-30 154.69,-26 337.31,-26 337.31,-67.04"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="154.69,-63.04 158.69,-63.04 158.69,-59.04 154.69,-59.04"/>
+<polyline fill="none" stroke="#6f942e" stroke-width="1.15" points="154.69,-34 158.69,-34 158.69,-30 154.69,-30"/>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-49.67" font-family="Arial" font-size="10.50" fill="#17201a">Matched user&#45;space stack</text>
+<text xml:space="preserve" text-anchor="middle" x="246" y="-37.07" font-family="Arial" font-size="10.50" fill="#17201a">libcuda · NVML · display libraries</text>
+</g>
+<!-- interfaces&#45;&gt;userspace -->
+<g id="edge20" class="edge">
+<title>interfaces&#45;&gt;userspace</title>
+<path fill="none" stroke="#5d675f" stroke-width="1.2" d="M246,-105.53C246,-105.53 246,-76.03 246,-76.03"/>
+<polygon fill="#5d675f" stroke="#5d675f" stroke-width="1.2" points="248.38,-76.03 246,-69.23 243.62,-76.03 248.38,-76.03"/>
+</g>
+</g>
 </svg>
