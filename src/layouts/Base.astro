@@ -9,10 +9,12 @@ import type { SiteMeta } from "@/types";
 
 interface Props {
 	meta: SiteMeta;
+	variant?: "default" | "index";
 }
 
 const {
 	meta: { articleDate, description = siteConfig.description, ogImage, title },
+	variant = "default",
 } = Astro.props;
 ---
 
@@ -23,9 +25,9 @@ const {
 	</head>
 	<body>
 		<SkipLink />
-		<div class="site-shell">
+		<div class:list={["site-shell", { "site-shell--index": variant === "index" }]}>
 			<Header />
-			<main class="main-content" id="main">
+			<main class:list={["main-content", { "main-content--index": variant === "index" }]} id="main">
 				<slot />
 			</main>
 			<Footer />

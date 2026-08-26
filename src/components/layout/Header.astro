@@ -10,34 +10,50 @@ const isActive = (path: string) =>
 ---
 
 <header class="site-header" data-pagefind-ignore>
-	<a aria-current={currentPath === "/" ? "page" : undefined} class="site-mark" href={withBase("/")}>
-		<span>hans</span><span aria-hidden="true" class="site-mark-cursor">_</span>
-	</a>
+	<div class="header-topline">
+		<a
+			aria-current={currentPath === "/" ? "page" : undefined}
+			class="site-mark"
+			href={withBase("/")}
+		>
+			<span class="site-mark-name">HANS</span>
+			<span aria-hidden="true" class="site-mark-slash">/</span>
+			<span>FIELD INDEX</span>
+		</a>
+
+		<div aria-hidden="true" class="signal-strip">
+			<span class="signal-kernel"></span>
+			<span class="signal-firmware"></span>
+			<span class="signal-memory"></span>
+			<span class="signal-method"></span>
+		</div>
+
+		<div class="header-actions">
+			<Search />
+			<ThemeToggle />
+			<details class="mobile-menu">
+				<summary>Menu</summary>
+				<nav aria-label="Mobile">
+					{
+						menuLinks.map((link) => (
+							<a aria-current={isActive(link.path) ? "page" : undefined} href={withBase(link.path)}>
+								{link.title}
+							</a>
+						))
+					}
+				</nav>
+			</details>
+		</div>
+	</div>
 
 	<nav aria-label="Main" class="desktop-nav">
 		{
-			menuLinks.map((link) => (
+			menuLinks.map((link, index) => (
 				<a aria-current={isActive(link.path) ? "page" : undefined} href={withBase(link.path)}>
+					<span aria-hidden="true">0{index + 1}</span>
 					{link.title}
 				</a>
 			))
 		}
 	</nav>
-
-	<div class="header-actions">
-		<Search />
-		<ThemeToggle />
-		<details class="mobile-menu">
-			<summary>Menu</summary>
-			<nav aria-label="Mobile">
-				{
-					menuLinks.map((link) => (
-						<a aria-current={isActive(link.path) ? "page" : undefined} href={withBase(link.path)}>
-							{link.title}
-						</a>
-					))
-				}
-			</nav>
-		</details>
-	</div>
 </header>

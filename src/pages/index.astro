@@ -1,60 +1,185 @@
 ---
-import NoteListItem from "@/components/NoteListItem.astro";
-import SectionHeading from "@/components/SectionHeading.astro";
-import SocialList from "@/components/SocialList.astro";
-import WritingListItem from "@/components/WritingListItem.astro";
 import { getAllNotes, getAllWriting } from "@/data/content";
 import PageLayout from "@/layouts/Base.astro";
 import { siteConfig } from "@/site.config";
+import { withBase } from "@/utils/url";
 
 const [allNotes, allWriting] = await Promise.all([getAllNotes(), getAllWriting()]);
-const latestNotes = allNotes.slice(0, 5);
-const selectedWriting = [...allWriting]
-	.sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
+const notebook = [
+	...allNotes.map((entry) => ({
+		description: entry.data.description,
+		id: entry.id,
+		kind: "note" as const,
+		publishDate: entry.data.publishDate,
+		title: entry.data.title,
+		url: `/notes/${entry.id}/`,
+	})),
+	...allWriting.map((entry) => ({
+		description: entry.data.description,
+		id: entry.id,
+		kind: "essay" as const,
+		publishDate: entry.data.publishDate,
+		title: entry.data.title,
+		url: `/writing/${entry.id}/`,
+	})),
+]
+	.sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime())
 	.slice(0, 3);
+
+const principles = [
+	"Follow the boundary end to end.",
+	"Name the mechanism, not the slogan.",
+	"Keep the notebook close to the source.",
+	"Public interfaces in; confidential work out.",
+];
+
+const figures = [
+	{
+		alt: "A systems architecture map connecting userspace, Linux interfaces, NVIDIA kernel modules, firmware, and GPU hardware.",
+		caption: "Runtime boundary map",
+		src: withBase("/diagrams/nvidia-runtime-architecture.svg"),
+	},
+	{
+		alt: "A build flow diagram showing the NVIDIA driver package passing through DKMS and Kbuild into installed modules.",
+		caption: "DKMS contract map",
+		src: withBase("/diagrams/dkms-contract-map.svg"),
+	},
+	{
+		alt: "A diagram of the NVIDIA kernel module build architecture and its module boundaries.",
+		caption: "Module build anatomy",
+		src: withBase("/diagrams/nvidia-module-build.svg"),
+	},
+];
+
+const formatDate = (date: Date) =>
+	new Intl.DateTimeFormat("en", { day: "2-digit", month: "short", year: "numeric" })
+		.format(date)
+		.toUpperCase();
 ---
 
-<PageLayout meta={{ title: "Home" }}>
-	<section class="hero">
-		<p class="terminal-line"><span>hans@machine</span>:~$ whoami</p>
-		<h1>GPU systems, from the kernel up.</h1>
-		<p class="hero-lede">Field notes on drivers, firmware, memory, and Linux.</p>
-		<p class="hero-copy">
-			I'm Hans. I work on GPU systems at a fabless semiconductor company. This is where I
-			trace the boundaries between hardware, firmware, the kernel, and the runtime.
-		</p>
-		<SocialList />
-	</section>
+<PageLayout meta={{ title: "Home" }} variant="index">
+	<div class="index-sheet">
+		<aside aria-label="Index coordinates" class="index-margin">
+			<p class="index-coordinate">00—A</p>
+			<p class="index-vertical">SYSTEMS FIELD NOTES</p>
+			<ol aria-label="Section coordinates" class="index-register">
+				<li><span>01</span><i class="signal-kernel"></i></li>
+				<li><span>02</span><i class="signal-firmware"></i></li>
+				<li><span>03</span><i class="signal-memory"></i></li>
+				<li><span>04</span><i class="signal-method"></i></li>
+			</ol>
+		</aside>
 
-	<section aria-labelledby="focus-heading" class="focus-block">
-		<h2 id="focus-heading">Current focus</h2>
-		<ul class="focus-list">
-			{siteConfig.currentFocus.map((focus) => <li>{focus}</li>)}
-		</ul>
-	</section>
+		<div class="index-primary">
+			<header class="index-intro">
+				<p class="index-kicker"><span>00</span> / A WORKING INDEX</p>
+				<h1>Tracing the layers where software meets the machine.</h1>
+				<p>
+					I'm Hans. I work close to the machine—following the handoffs between hardware, firmware,
+					the Linux kernel, and the runtime.
+				</p>
+			</header>
 
-	{
-		latestNotes.length > 0 && (
-			<section class="home-section">
-				<SectionHeading href="/notes/" label="Latest notes" />
-				<ul class="entry-list">
-					{latestNotes.map((note) => (
-						<li><NoteListItem as="h3" note={note} /></li>
-					))}
+			<section aria-labelledby="currently-heading" class="index-section currently-section">
+				<div class="index-section-heading">
+					<h2 id="currently-heading">Currently</h2>
+					<span>ACTIVE THREADS / 04</span>
+				</div>
+				<ul class="current-grid">
+					{
+						siteConfig.currentFocus.map((focus, index) => (
+							<li>
+								<span class:list={["status-mark", `status-mark--${index + 1}`]} />
+								<span>{focus}</span>
+								<small>0{index + 1}</small>
+							</li>
+						))
+					}
 				</ul>
 			</section>
-		)
-	}
-	{
-		selectedWriting.length > 0 && (
-			<section class="home-section">
-				<SectionHeading href="/writing/" label="Selected writing" />
-				<ul class="entry-list">
-					{selectedWriting.map((entry) => (
-						<li><WritingListItem as="h3" entry={entry} /></li>
-					))}
-				</ul>
+
+			<section aria-labelledby="notebook-heading" class="index-section notebook-section">
+				<div class="index-section-heading">
+					<h2 id="notebook-heading">From the notebook</h2>
+					<a href={withBase("/notes/")}>Browse all →</a>
+				</div>
+				<ol class="notebook-list">
+					{
+						notebook.map((entry, index) => (
+							<li>
+								<span aria-hidden="true" class="notebook-number">
+									{String(index + 1).padStart(2, "0")}
+								</span>
+								<div>
+									<p class="notebook-meta">
+										<span>{entry.kind}</span>
+										<time datetime={entry.publishDate.toISOString()}>
+											{formatDate(entry.publishDate)}
+										</time>
+									</p>
+									<h3>
+										<a href={withBase(entry.url)}>{entry.title}</a>
+									</h3>
+									<p class="notebook-description">{entry.description}</p>
+								</div>
+							</li>
+						))
+					}
+				</ol>
 			</section>
-		)
-	}
+
+			<section aria-labelledby="elsewhere-heading" class="index-section elsewhere-section">
+				<div class="index-section-heading">
+					<h2 id="elsewhere-heading">Elsewhere</h2>
+					<span>PUBLIC LINKS</span>
+				</div>
+				<nav aria-label="Elsewhere">
+					<a href={siteConfig.github} rel="me noreferrer" target="_blank"
+						><span>GitHub</span><small>CODE / NOTES</small><b>↗</b></a
+					>
+					<a href={withBase("/rss.xml")}><span>RSS</span><small>NEW ENTRIES</small><b>→</b></a>
+					<a href={siteConfig.repository} rel="noreferrer" target="_blank"
+						><span>Source</span><small>THIS SITE</small><b>↗</b></a
+					>
+				</nav>
+			</section>
+		</div>
+
+		<aside class="index-secondary">
+			<section aria-labelledby="principles-heading" class="principles-panel">
+				<p class="panel-label">01 / WORKING PRINCIPLES</p>
+				<h2 id="principles-heading">How I try to look at systems.</h2>
+				<ol>
+					{
+						principles.map((principle, index) => (
+							<li>
+								<span>{String(index + 1).padStart(2, "0")}</span>
+								{principle}
+							</li>
+						))
+					}
+				</ol>
+			</section>
+
+			<section aria-labelledby="figures-heading" class="figures-panel">
+				<div class="figures-heading">
+					<p class="panel-label">02 / FIELD FIGURES</p>
+					<h2 id="figures-heading">Maps from recent work.</h2>
+				</div>
+				{
+					figures.map((figure, index) => (
+						<figure>
+							<a href={figure.src}>
+								<img alt={figure.alt} loading={index === 0 ? "eager" : "lazy"} src={figure.src} />
+							</a>
+							<figcaption>
+								<span>FIG. 0{index + 1}</span>
+								{figure.caption}
+							</figcaption>
+						</figure>
+					))
+				}
+			</section>
+		</aside>
+	</div>
 </PageLayout>

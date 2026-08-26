@@ -8,6 +8,37 @@ const meta = {
 	title: "About",
 };
 
+const principles = [
+	"Follow the boundary end to end.",
+	"Name the mechanism, not the slogan.",
+	"Keep the notebook close to the source.",
+	"Public interfaces in; confidential work out.",
+];
+
+const focusAreas = [
+	{
+		description: "Module boundaries, kernel interfaces, and resource lifecycles.",
+		title: "Driver and kernel integration",
+	},
+	{
+		description: "Boot stages, firmware handoffs, and locating the layer that actually failed.",
+		title: "Bring-up and failure analysis",
+	},
+	{
+		description: "Address translation, residency, migration, coherency, and fault handling.",
+		title: "Memory systems",
+	},
+	{
+		description: "Tracing, crash evidence, and reproducible debugging workflows.",
+		title: "Systems tooling",
+	},
+];
+
+const rotation = ["Pink Floyd", "Kanye West", "Khalil Fong"];
+
+const referenceArticle =
+	"https://newsletter.semianalysis.com/p/nvidia-tensor-core-evolution-from-volta-to-blackwell";
+
 const personData = {
 	"@context": "https://schema.org",
 	"@type": "Person",
@@ -24,59 +55,167 @@ const personData = {
 };
 ---
 
-<PageLayout meta={meta}>
-	<header class="page-header">
-		<p class="eyebrow"><span>01</span> / about</p>
-		<h1 class="page-title">About</h1>
-		<p class="page-intro">A short introduction to the person behind these notes.</p>
-	</header>
-	<div class="prose prose-sm article-shell" data-pagefind-body>
-		<p>
-			I'm Hans. I work on GPU systems at a fabless semiconductor company. I care about the
-			boundaries that make a GPU usable as a system: where the driver meets the kernel, where
-			firmware takes over resource management, and where virtual addresses become mappings,
-			residency decisions, and migration.
-		</p>
+<PageLayout meta={meta} variant="index">
+	<div class="index-sheet profile-sheet">
+		<aside aria-label="Profile coordinates" class="index-margin">
+			<p class="index-coordinate">01—A</p>
+			<p class="index-vertical">PERSON / SYSTEMS / NOTES</p>
+			<ol aria-label="Profile section coordinates" class="index-register">
+				<li><span>01</span><i class="signal-kernel"></i></li>
+				<li><span>02</span><i class="signal-firmware"></i></li>
+				<li><span>03</span><i class="signal-memory"></i></li>
+				<li><span>04</span><i class="signal-method"></i></li>
+			</ol>
+		</aside>
 
-		<h2>Areas of focus</h2>
-		<ul>
-			<li>
-				<strong>Driver and kernel integration:</strong> module boundaries, kernel interfaces, and
-				resource lifecycles
-			</li>
-			<li>
-				<strong>Bring-up and failure analysis:</strong> boot stages, firmware handoffs, and locating
-				the layer that actually failed
-			</li>
-			<li>
-				<strong>Memory systems:</strong> address translation, residency, migration, coherency, and
-				fault handling
-			</li>
-			<li>
-				<strong>Systems tooling:</strong> tracing, crash evidence, and reproducible debugging
-				workflows
-			</li>
-		</ul>
+		<div class="index-primary profile-primary" data-pagefind-body>
+			<header class="index-intro profile-intro">
+				<p class="index-kicker"><span>01</span> / FIELD PROFILE</p>
+				<h1>I work where software meets the machine.</h1>
+				<p>
+					I'm Hans. I work on GPU systems at a fabless semiconductor company, following the handoffs
+					between hardware, firmware, the Linux kernel, and the runtime.
+				</p>
+				<dl class="profile-facts">
+					<div><dt>Field</dt><dd>GPU systems</dd></div>
+					<div><dt>Method</dt><dd>Trace boundaries</dd></div>
+					<div><dt>Output</dt><dd>Public field notes</dd></div>
+				</dl>
+			</header>
 
-		<h2>About this site</h2>
-		<p>
-			This site is a public field notebook: compact notes for mechanisms worth remembering and
-			longer explanations when a boundary needs to be followed end to end. It is intentionally
-			static, lightweight, and kept close to the source files.
-		</p>
-		<p>
-			The views here are my own. I write from public interfaces, upstream sources, and general
-			engineering practice; confidential work stays private.
-		</p>
+			<section aria-labelledby="architecture-heading" class="index-section profile-architecture">
+				<div class="index-section-heading">
+					<h2 id="architecture-heading">A system in layers</h2>
+					<span>REFERENCE PLATE / 01</span>
+				</div>
+				<figure>
+					<div class="profile-image-frame">
+						<img
+							alt="Layered GPU execution hierarchy showing streaming multiprocessors, register files, CUDA cores, instruction units, shared memory, and device memory."
+							height="1254"
+							src={withBase("/images/reference/gpu-execution-hierarchy.webp")}
+							width="1254"
+						/>
+					</div>
+					<figcaption>
+						<span>FIG. 01 / GPU EXECUTION HIERARCHY</span>
+						<a href={referenceArticle} rel="noreferrer" target="_blank"
+							>ORIGINAL REDRAW AFTER SEMIANALYSIS ↗</a
+						>
+					</figcaption>
+				</figure>
+			</section>
 
-		<h2>Elsewhere</h2>
-		<p>
-			Find my public code and repositories on <a
-				href={siteConfig.github}
-				rel="me noreferrer"
-				target="_blank">GitHub</a
-			>.
-		</p>
+			<section aria-labelledby="focus-heading" class="index-section profile-focus">
+				<div class="index-section-heading">
+					<h2 id="focus-heading">Areas of focus</h2>
+					<span>WORKING LAYERS / 04</span>
+				</div>
+				<ol class="profile-focus-list">
+					{
+						focusAreas.map((focus, index) => (
+							<li>
+								<span>{String(index + 1).padStart(2, "0")}</span>
+								<div>
+									<h3>{focus.title}</h3>
+									<p>{focus.description}</p>
+								</div>
+							</li>
+						))
+					}
+				</ol>
+			</section>
+
+			<section aria-labelledby="site-heading" class="index-section profile-site-notes">
+				<div class="index-section-heading">
+					<h2 id="site-heading">About this site</h2>
+					<span>PUBLIC NOTEBOOK / 02</span>
+				</div>
+				<div class="profile-note-grid">
+					<p>
+						This site is a public field notebook: compact notes for mechanisms worth remembering,
+						and longer explanations when a boundary needs to be followed end to end.
+					</p>
+					<p>
+						It is intentionally static, lightweight, and kept close to the source files. The views
+						here are my own; confidential work stays private.
+					</p>
+				</div>
+			</section>
+
+			<section aria-labelledby="elsewhere-heading" class="index-section elsewhere-section">
+				<div class="index-section-heading">
+					<h2 id="elsewhere-heading">Elsewhere</h2>
+					<span>PUBLIC LINKS</span>
+				</div>
+				<nav aria-label="Elsewhere">
+					<a href={siteConfig.github} rel="me noreferrer" target="_blank"
+						><span>GitHub</span><small>CODE / NOTES</small><b>↗</b></a
+					>
+					<a href={withBase("/rss.xml")}><span>RSS</span><small>NEW ENTRIES</small><b>→</b></a>
+					<a href={siteConfig.repository} rel="noreferrer" target="_blank"
+						><span>Source</span><small>THIS SITE</small><b>↗</b></a
+					>
+				</nav>
+			</section>
+		</div>
+
+		<aside class="index-secondary profile-secondary">
+			<section aria-labelledby="principles-heading" class="principles-panel">
+				<p class="panel-label">01 / WORKING PRINCIPLES</p>
+				<h2 id="principles-heading">How I try to look at systems.</h2>
+				<ol>
+					{
+						principles.map((principle, index) => (
+							<li>
+								<span>{String(index + 1).padStart(2, "0")}</span>
+								{principle}
+							</li>
+						))
+					}
+				</ol>
+			</section>
+
+			<section aria-labelledby="detail-heading" class="profile-detail-panel">
+				<div class="profile-panel-heading">
+					<p class="panel-label">02 / DETAIL PLATE</p>
+					<h2 id="detail-heading">Tensor memory, one data path at a time.</h2>
+				</div>
+				<figure>
+					<img
+						alt="Tensor Core data path showing a thread issuing TCGEN05.MMA and reading or writing Tensor Memory and Shared Memory."
+						height="1536"
+						loading="lazy"
+						src={withBase("/images/reference/blackwell-tmem-path.webp")}
+						width="1024"
+					/>
+					<figcaption>
+						<span>FIG. 02</span>
+						<a href={referenceArticle} rel="noreferrer" target="_blank">REFERENCE ↗</a>
+					</figcaption>
+				</figure>
+			</section>
+
+			<section aria-labelledby="rotation-heading" class="profile-rotation-panel">
+				<p class="panel-label">03 / PERMANENT ROTATION</p>
+				<h2 id="rotation-heading">Three artists I keep coming back to.</h2>
+				<ol>
+					{
+						rotation.map((artist, index) => (
+							<li>
+								<span>{String(index + 1).padStart(2, "0")}</span>
+								<strong>{artist}</strong>
+							</li>
+						))
+					}
+				</ol>
+			</section>
+
+			<section class="profile-colophon">
+				<p class="panel-label">04 / COLOPHON</p>
+				<p>Static by design. Written in public. Kept close to the source.</p>
+			</section>
+		</aside>
 	</div>
 	<script is:inline type="application/ld+json" set:html={JSON.stringify(personData)} />
 </PageLayout>
